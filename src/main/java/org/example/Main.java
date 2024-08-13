@@ -7,10 +7,10 @@ import java.io.IOException;
 public class Main {
    
     public static final String RED = "\033[0;31m";
-     public static final String YELLOW = "\033[0;33m";
+    public static final String YELLOW = "\033[0;33m";
     public static void main(String[] args) {
-        String inputFilePath = "/mnt/c/Users/Sello/Documents/RecSPL/src/main/java/org/example/input.txt";
-        String outputFilePath = "/mnt/c/Users/Sello/Documents/RecSPL/src/main/java/org/example/output.txt";
+        String inputFilePath = "src/main/resources/input.txt";
+        String outputFilePath = "src/main/resources/output.txt";
     
         try (FileWriter writer = new FileWriter(outputFilePath)) {
             Lexer lexer = new Lexer();
