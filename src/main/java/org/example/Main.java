@@ -23,9 +23,8 @@ public class Main {
                     List<Token> allTokens = lexer.getTokens();
     
                     if (allTokens != null && !allTokens.isEmpty()) {
-                        for (Token token : allTokens) {
-                            writer.write(token.data + token.id + System.lineSeparator());
-                        }
+                        var xWriter = new XMLWriter(new ArrayList<>(allTokens));
+                        xWriter.writeTokens();
                         System.out.println(YELLOW+" Tokens have been successfully written to the output file.");
                     } /*else {
                         System.err.println("No tokens were retrieved from the input file.");
