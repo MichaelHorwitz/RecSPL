@@ -44,21 +44,24 @@ public class XMLWriter {
         outStr.append("<TOKENSTREAM>\n");
         for (var token : tokens) {
             outStr.append("<TOK>" + "\n");
-            outStr.append("<ID>" + "\n");
-            outStr.append(token.id + "\n");
+            outStr.append("<ID>");
+            outStr.append(token.id);
             outStr.append("</ID>" + "\n");
-            outStr.append("<CLASS>" + "\n");
-            outStr.append(token.getClass() + "\n");
+            outStr.append("<CLASS>");
+            outStr.append(token.type);
             outStr.append("</CLASS>" + "\n");
-            outStr.append("<WORD>" + "\n");
-            outStr.append(token.data + "\n");
+            outStr.append("<WORD>");
+            outStr.append(token.data);
             outStr.append("</WORD>" + "\n");
             outStr.append("</TOK>" + "\n");
         }
         outStr.append("</TOKENSTREAM>\n");
         System.out.println(outStr);
         try {
-            fileWriter.append(outStr);
+            // fileWriter = new ter("src/main/resources/output.txt");
+            fileWriter.write(outStr.toString());
+            fileWriter.flush();
+            fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
             return false;
