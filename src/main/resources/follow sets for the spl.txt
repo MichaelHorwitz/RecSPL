@@ -1,0 +1,140 @@
+ follow sets for the spl 
+ 
+ follow (prog)={ 
+ 
+    $
+
+ }
+ follow (globvars)={
+
+    begin 
+
+ }
+ follow (vtype)= {
+
+    class v from lexer
+ }
+  follow (vname)={
+
+    , <input = ) ;
+
+
+  } 
+  follow (algo)={
+
+     $ end else } ; 
+
+  }
+  follow (instruc)={
+
+     end $ 
+  } 
+  follow(command)={
+
+    ;
+  } 
+  follow (atomic )= {
+
+
+
+    ; , )
+  }
+ follow ( const)={
+
+    ; , )
+
+ } 
+ follow (assign)= {
+
+   ;
+
+
+ } 
+ follow (call)={
+
+  ; 
+
+
+ } 
+ follow (branch)={
+
+    ;
+ } 
+ follow (term) ={
+
+    ; , )
+ } 
+ follow (OP)={
+
+   ; , )
+
+ }
+follow (arg)={
+    ; , )
+
+} 
+follow (cond)={
+
+
+    then
+}
+follow (simple)={
+
+
+    then , )
+} 
+follow (composit)={
+
+    then
+}
+follow( unop)={
+
+
+    (
+} 
+follow (binop)={
+
+
+    (
+} 
+follow (fname)={
+
+    (
+} 
+follow (functions)={
+
+     end $ 
+} 
+follow (decl)={
+
+
+    end $ 
+} 
+follow (header)={
+
+    main
+} 
+follow(ftype) ={
+
+    token class f from lexer
+} 
+follow(body)={
+
+    end $
+} 
+follow (prolog)={
+
+     num , void
+} 
+follow( epilog) ={
+
+     }
+} 
+follow (localvars)={
+
+    begin 
+} 
+follow ( subfuncs)={
+
+    end
+}

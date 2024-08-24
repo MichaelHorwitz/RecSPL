@@ -1,0 +1,190 @@
+   
+ first (prog) = {main}
+ first (globvars)=  folllow(globvars) = {begin}
+ first (globvars)= first(vtype)= {num,text}
+first (vtype ) ={num,text} 
+first(vname)= {token class v from lexer} 
+first (algo)= {begin} 
+first(instruc)= {  follow(instruc) = {  
+  
+    end , $
+
+}} 
+first(instruc)= first(command)= {  
+                     {skip, halt, print} ∪ FIRST(ASSIGN) ∪ FIRST(CALL) ∪ FIRST(BRANCH) 
+                     {skip, halt, print , token class v , token class f , if}
+}
+      first(atomic)= first vname , first const 
+               = {token class v from lexer  , token class n ,t } 
+
+first ( const) = {
+
+  token class n , token class t 
+
+} 
+first(assig) = {
+
+  first(vname)=  token class v from lexer
+
+}
+first (assign){
+
+   first(vname)= token class v from lexer
+
+} 
+first( call) ={
+
+
+    first(fname) =  token class f from lexer
+
+
+} 
+first(branch)={
+
+    if
+} 
+first(term)={ first(atomic)= 
+  
+first vname , first const 
+= {token class v from lexer  , token class n , token class t } 
+
+} 
+first(term)={  
+
+ first(call)= first(fname) =
+    token class f from lexer
+
+
+} 
+first(term)={  
+
+  first(op) = not sqrt or and eq grt add sub mul div 
+
+} 
+
+first(arg)={
+
+  firs(atomic)= 
+  = {token class v from lexer  , token class n , token class t } 
+
+}
+first(arg)={ 
+  first(op)= 
+   
+  not  sqrt or  and eq grt add sub   mul  div
+} 
+first (op){ 
+
+    first (unop)= {
+
+        not sqrt
+    } 
+    first  (binop) ={
+        or  and eq grt add sub   mul  di
+
+    } 
+
+}  
+first( cond)={
+
+
+     first(simple)= {
+
+        first(binop) =
+        {
+            
+            or  and eq grt add sub   mul  di
+        
+           
+
+        }
+     } 
+    first(composite) ={
+
+
+        first(binop)= 
+         {
+
+            or  and eq grt add sub   mul  di
+         }
+    }
+   first (unop) ={
+    not sqrt
+
+   }
+} 
+first(simple)= {
+
+    first(binop) =
+    {
+        
+        or  and eq grt add sub   mul  di
+    
+       
+
+    }
+ } 
+ first(composite) ={
+
+
+    first(binop)= 
+     {
+
+        or  and eq grt add sub   mul  di
+     }
+
+first (unop) ={
+not sqrt
+
+}
+}
+first(binop)= 
+     {
+
+        or  and eq grt add sub   mul  di
+     }
+ first (unop) ={
+        not sqrt
+        
+        }
+first(fname)= token class f from lexer 
+first(functions)= {
+
+    follow(functions) =$ , end 
+}
+first(functions)={
+
+    num,void
+} 
+first(decl)= {
+
+    num,void 
+} 
+first (header)={
+    num, void 
+}
+first(ftyp)={
+    num
+}
+first(ftype)={
+    void
+}
+first (body)= first(prolog) ={
+
+  main 
+}  
+first (prolog)=  "{"
+first (epilogue)= "} "
+first (localvars)= {num , void }
+ first(subf) =first(functions )={
+
+        first(functions)= {
+
+            follow(functions) =$ , end
+        }
+        first(functions)={
+        
+            num,void
+        }   
+    }
+    
