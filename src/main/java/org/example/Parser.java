@@ -25,7 +25,8 @@ public class Parser {
             for (String line : lines) {
                 String [] halves = line.split(":");
                 List<String> firstSet = new ArrayList<>();
-                for(String s: halves[1].split(" ")){
+                String[] outTokens = halves[1].split(" ");
+                for(String s: outTokens){
                     firstSet.add(s);
                 }
                 Rule rule = new Rule(halves[0], firstSet);

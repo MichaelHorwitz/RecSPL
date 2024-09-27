@@ -46,9 +46,14 @@ public class Main {
         KeywordToken kt = new KeywordToken();
         kt.data = "main";
         parser.inputStream.add(kt);
+        KeywordToken kt2 = new KeywordToken();
+        kt2.data = "text";
+        parser.inputStream.add(kt2);
         parser.loadRules("src/main/resources/first sets.txt");
         SyntaxNode node = parser.matchToken();
         System.out.println(node.token.data);
+        SyntaxNode node2 = parser.matchToken();
+        System.out.println(node2.token.data);
 
     }
     
