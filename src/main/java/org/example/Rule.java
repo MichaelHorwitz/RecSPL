@@ -1,15 +1,12 @@
 package org.example;
 
+import java.util.List;
+
 public class Rule {
-    private enum RuleType {
-        Follow, First
-    }
-    public RuleType type;
-    public Token inputToken;
-    public Token outputToken;
-    public Rule(Token inputToken, Token outputToken, RuleType type) {
+    public List<String> firstSet;
+    public String inputToken;
+    public Rule(String inputToken, List<String> firstSet){
         this.inputToken = inputToken;
-        this.outputToken = outputToken;
-        this.type = type;
+        this.firstSet = firstSet;
     }
 }
