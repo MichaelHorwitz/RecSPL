@@ -757,7 +757,7 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
             String token = tokenList.get(0).name;
     
             // Check if it's a valid number (Token-Class N)
-            if (token.matches("[0-9]+")) {  // Token-Class N (numbers)
+            if (token.matches("-?[0-9]+(\\.[0-9]+)?")) {  // Token-Class N (numbers)
                 Node constNode = new Node("CONST");
                 constNode.line = tokenList.get(0).line;
                 constNode.childNodes.add(new Node(token));
@@ -765,7 +765,7 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
                 tokenList.remove(0);  // Consume the number
             } 
             // Check if it's a valid text (Token-Class T)
-            else if (token.matches("\"[A-Za-z]+\"")) {  // Token-Class T (text)
+            else if (token.matches("\"[A-Z][a-z]{0,7}\"")) {  // Token-Class T (text)
                 Node constNode = new Node("CONST");
                 constNode.line = tokenList.get(0).line;
                 constNode.childNodes.add(new Node(token));
