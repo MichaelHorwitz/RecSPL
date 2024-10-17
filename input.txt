@@ -1,0 +1,15 @@
+main
+num V_mynum ,
+text V_mytext ,
+begin
+    skip ;
+    print V_mynum ;
+    if and (0, V_mynum) then
+        begin
+            skip ;
+        end
+    else
+        begin
+            skip ;
+        end ;
+end

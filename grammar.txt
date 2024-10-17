@@ -1,0 +1,62 @@
+PROG ::= main GLOBVARS ALGO FUNCTIONS
+GLOBVARS ::= // nullable
+GLOBVARS ::= VTYP VNAME , GLOBVARS // there can be as many glob-vars as we like
+VTYP ::= num
+VTYP ::= text
+VNAME ::= a token of Token-Class V from the Lexer // see the Appendix below
+ALGO ::= begin INSTRUC end
+INSTRUC ::= // nullable
+INSTRUC ::= COMMAND ; INSTRUC
+COMMAND ::= skip // an empty algorithmic step in which nothing happens
+COMMAND ::= halt
+COMMAND ::= print ATOMIC
+COMMAND ::= ASSIGN
+COMMAND ::= CALL // call to a void-function that only updates global variables
+COMMAND ::= BRANCH
+// Note: no LOOP, because we use functional recursions instead of loops
+ATOMIC ::= VNAME
+ATOMIC ::= CONST
+CONST ::= a token of Token-Class N from the Lexer // see the Appendix below
+CONST ::= a token of Token-Class T from the Lexer // see the Appendix below
+ASSIGN ::= VNAME < input // from the user during run-time
+ASSIGN ::= VNAME = TERM // Deep nesting of assignment terms is allowed: see below
+CALL ::= FNAME( ATOMIC , ATOMIC , ATOMIC ) // we only allow un-nested params
+// such that our Project will not get too complicated
+BRANCH ::= if COND then ALGO else ALGO // also our Conditions will be quite simple
+TERM ::= ATOMIC
+TERM ::= CALL // call to a result-function that emits a return-value
+TERM ::= OP // in general, operations in assigments can be deeply nested: see below
+OP ::= UNOP( ARG ) // for simplicity we do not allow function-calls as args
+OP ::= BINOP( ARG , ARG )
+ARG ::= ATOMIC
+ARG ::= OP // this recursive rule permits the deep-nesting of operations
+COND ::= SIMPLE // for simplicity we do not allow very deeply nested Conditions;
+COND ::= COMPOSIT // we permit only one level of nesting Conditions in this project
+SIMPLE ::= BINOP( ATOMIC , ATOMIC )
+COMPOSIT ::= BINOP( SIMPLE , SIMPLE )
+COMPOSIT ::= UNOP ( SIMPLE )
+UNOP ::= not
+UNOP ::= sqrt // the square root of real numbers
+BINOP ::= or
+BINOP ::= and
+BINOP ::= eq
+BINOP ::= grt // greater than >
+BINOP ::= add
+BINOP ::= sub
+BINOP ::= mul
+BINOP ::= div
+FNAME ::= a token of Token-Class F from the Lexer // see the Appendix below
+FUNCTIONS ::= // nullable
+FUNCTIONS ::= DECL FUNCTIONS
+DECL ::= HEADER BODY
+HEADER ::= FTYP FNAME( VNAME , VNAME , VNAME )
+// for simplicity, all our functions have 3 "incoming" parameters
+FTYP ::= num
+FTYP ::= void
+BODY ::= PROLOG LOCVARS ALGO EPILOG SUBFUNCS end
+PROLOG ::= { // the prolog is an important concept, as you will see later in chapter 9
+EPILOG ::= } // the epilog is an important concept, as you will see later in chapter 9
+LOCVARS ::= VTYP VNAME , VTYP VNAME , VTYP VNAME ,
+// for simplicity, all our functions have 3 local variables
+// in addition to their three "incoming" parameters
+SUBFUNCS ::= FUNCTIONS // we allow functions to have their own local sub-functions
