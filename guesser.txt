@@ -1,0 +1,32 @@
+main
+    num V_secret ,
+    num V_current ,
+begin
+    print "Secret" ;
+    V_secret <input ;
+    F_next ( 0 , 0 , 0 ) ;
+end
+
+void F_next ( V_a , V_b , V_c ) {
+    num V_d , num V_e , num V_f ,
+    begin
+        F_guess ( 0 , 0 , 0 ) ;
+        if eq ( V_current , V_secret ) then
+        begin
+            print "Correct" ;
+        end
+        else
+        begin
+            F_next ( 0 , 0 , 0 ) ;
+        end ;
+    end
+    }
+    void F_guess ( V_g , V_h , V_i ) {
+        num V_j , num V_k , num V_l ,
+        begin
+            print "Guess" ;
+            V_current <input ;
+        end
+    }
+end
+

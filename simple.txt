@@ -1,0 +1,29 @@
+main num V_hello , num V_nope ,
+begin
+    print V_nope ;
+end
+void F_fun ( V_a , V_b , V_c ) {
+    num V_d , num V_e , num V_f ,
+    begin
+        F_fun ( 2 , 2 , 2 ) ;
+    end
+}
+end
+
+void F_fun2 ( V_a , V_b , V_c ) {
+    num V_d , num V_e , num V_f ,
+    begin
+        F_fun ( 2 , 2 , 2 ) ;
+    end
+}
+
+void F_fun ( V_a , V_b , V_c ) {
+    num V_d , num V_e , num V_f ,
+    begin
+        F_fun ( 2 , 2 , 2 ) ;
+    end
+}
+end
+
+
+end
