@@ -104,29 +104,40 @@ public class RecSPLLexer {
                     buf = "F_";  // Set buf to "F_" directly
                     c += 2;  // Skip over "F_"
                     
-                    // Append the rest of the function name
-                    while (c < ls.length() && (Character.isLetterOrDigit(ls.charAt(c)))) {
+                    // Append the rest of the function name (allowing letters and digits)
+                    while (c < ls.length() && Character.isLetterOrDigit(ls.charAt(c))) {
                         buf += ls.charAt(c++);
                     }
-                    
+                
+                    // Match against the function pattern
                     Matcher matcher = functionPattern.matcher(buf);
                     if (matcher.matches()) {
-                        tokens.add(new Token(buf, r));
+                        tokens.add(new Token(buf, r));  // Add valid function name as a token
                     } else {
                         System.out.println("Lexical Error on line " + r + ": Invalid function name " + buf);
                         scan.close();
                         return false;
                     }
+                
+                    // Ignore any white spaces after the function name
+                    while (c < ls.length() && Character.isWhitespace(ls.charAt(c))) {
+                        c++;  // Skip over white spaces
+                    }
+                
                     // Now handle the opening parenthesis '(' and the arguments
                     if (c < ls.length() && ls.charAt(c) == '(') {
                         tokens.add(new Token("(", r));  // Add '(' as a token
                         c++;
                     } else {
-                        System.out.println("Lexical Error on line " + r + ": Missing opening parenthesis after function");
+                        System.out.println("Lexical Error on line " + r + ": Missing opening parenthesis after function " + buf);
                         scan.close();
                         return false;
                     }
+                    
+                    // You can now proceed with parsing the arguments if needed
+                    // For example, loop over the characters to handle function arguments here
                 }
+                
                 // Handle variable names (Token-Class V)
                 else if (ls.startsWith("V_", c)) {
                     buf = "V_";  // Set buf to "V_" directly

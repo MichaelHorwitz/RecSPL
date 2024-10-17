@@ -1,6 +1,6 @@
 main
 num
-V_secret
+V_secrets
 ,
 num
 V_current
@@ -55,7 +55,7 @@ F_guess
 if
 eq
 (
-V_current
+V_secret
 ,
 V_secret
 )
@@ -67,7 +67,7 @@ print
 end
 else
 begin
-F_next
+F_nexta
 (
 0
 ,
