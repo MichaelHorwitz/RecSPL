@@ -1,57 +1,72 @@
-<PROG>main
-<GLOBVARS><VTYP>num
+<PROG>main <GLOBVARS><VTYP>num
 </VTYP><VNAME>V_secret
-</VNAME>,
-</GLOBVARS><GLOBVARS><VTYP>num
+</VNAME>, </GLOBVARS><GLOBVARS><VTYP>num
 </VTYP><VNAME>V_current
-</VNAME>,
-</GLOBVARS><ALGO><INSTRUC><COMMAND>print
-<CONST>"Secret"
-</CONST></COMMAND>;
-<INSTRUC><COMMAND><VNAME>V_secret
-</VNAME>input
-</COMMAND>;
-<INSTRUC><COMMAND><CALL><FNAME>F_next
-</FNAME><ATOMIC>0
-</ATOMIC><ATOMIC>0
-</ATOMIC><ATOMIC>0
-</ATOMIC></CALL></COMMAND>;
-</INSTRUC></INSTRUC></INSTRUC>end
-</ALGO><FUNCTIONS><DECL><HEADER><FTYP>void
-</FTYP><VNAME>V_a
-</VNAME><VNAME>V_b
-</VNAME><VNAME>V_c
-</VNAME></HEADER><FNAME>F_next
-</FNAME><BODY>PROLOG
-<LOCVARS><VTYP>num
-</VTYP><VNAME>V_d
-</VNAME><VTYP>num
-</VTYP><VNAME>V_e
-</VNAME><VTYP>num
-</VTYP><VNAME>V_f
-</VNAME></LOCVARS><ALGO><INSTRUC><COMMAND><CALL><FNAME>F_guess
-</FNAME><ATOMIC>0
-</ATOMIC><ATOMIC>0
-</ATOMIC><ATOMIC>0
-</ATOMIC></CALL></COMMAND>;
-<INSTRUC><COMMAND><BRANCH><COMPOSIT><BINOP>eq
-<VNAME>V_current
+</VNAME>, </GLOBVARS><ALGO><INSTRUC><COMMAND>print <CONST>"Secret"
+</CONST></COMMAND>; <INSTRUC><COMMAND><VNAME>V_secret
+</VNAME>input </COMMAND>; <INSTRUC><COMMAND>
+                        <CALL>
+                            <FNAME>F_next
+</FNAME>
+                            <ATOMIC>0
+</ATOMIC>
+                            <ATOMIC>0
+</ATOMIC>
+                            <ATOMIC>0
+</ATOMIC>
+                        </CALL>
+                    </COMMAND>
+    ; </INSTRUC></INSTRUC></INSTRUC>end </ALGO><FUNCTIONS>
+        <DECL>
+            <HEADER>
+                <FTYP>void</FTYP>
+                <VNAME>V_a</VNAME>
+                <VNAME>V_b</VNAME>
+                <VNAME>V_c</VNAME>
+            </HEADER>
+            <FNAME>F_next</FNAME>
+            <BODY>PROLOG 
+                <LOCVARS>
+                    <VTYP>num</VTYP>
+                    <VNAME>V_d</VNAME>
+                    <VTYP>num</VTYP>
+                    <VNAME>V_e</VNAME>
+                    <VTYP>num</VTYP>
+                    <VNAME>V_f</VNAME>
+                </LOCVARS><ALGO><INSTRUC><COMMAND>
+                            <CALL>
+                                <FNAME>F_guess
+</FNAME>
+                                <ATOMIC>0
+</ATOMIC>
+                                <ATOMIC>0
+</ATOMIC>
+                                <ATOMIC>0
+</ATOMIC>
+                            </CALL>
+                        </COMMAND>
+    ; <INSTRUC><COMMAND>
+                                <BRANCH><COMPOSIT>
+                                        <BINOP>eq <VNAME>V_current
 </VNAME><VNAME>V_secret
-</VNAME></BINOP></COMPOSIT>then
-<ALGO><INSTRUC><COMMAND>print
-<CONST>"Correct"
-</CONST></COMMAND>;
-</INSTRUC>end
-</ALGO>else
-<ALGO><INSTRUC><COMMAND><CALL><FNAME>F_next
-</FNAME><ATOMIC>0
-</ATOMIC><ATOMIC>0
-</ATOMIC><ATOMIC>0
-</ATOMIC></CALL></COMMAND>;
-</INSTRUC>end
-</ALGO></BRANCH></COMMAND>;
-</INSTRUC></INSTRUC>end
-</ALGO>EPILOG
-SUBFUNCS
-end
-</BODY></DECL></FUNCTIONS></PROG>
+</VNAME></BINOP>
+                                    </COMPOSIT>
+    then <ALGO><INSTRUC><COMMAND>print <CONST>"Correct"
+</CONST></COMMAND>; </INSTRUC>end </ALGO>
+    else <ALGO><INSTRUC><COMMAND>
+                                                <CALL>
+                                                    <FNAME>F_next
+</FNAME>
+                                                    <ATOMIC>0
+</ATOMIC>
+                                                    <ATOMIC>0
+</ATOMIC>
+                                                    <ATOMIC>0
+</ATOMIC>
+                                                </CALL>
+                                            </COMMAND>
+    ; </INSTRUC>end </ALGO></BRANCH>
+                            </COMMAND>; </INSTRUC></INSTRUC>end </ALGO>EPILOG
+    SUBFUNCS end </BODY>
+        </DECL>
+    </FUNCTIONS></PROG>

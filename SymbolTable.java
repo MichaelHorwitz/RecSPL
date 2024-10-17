@@ -59,6 +59,17 @@ public class SymbolTable {
                     newVar.translatedName = "v" + node.id;
                     table.put(node.id, newVar);
                     stackOfTables.peek().put(node.id, newVar);
+                } else if (node.NodeName.equals("FNAME")){
+                    VariableProps newVar = new VariableProps();
+                    String varName = node.childNodes.get(0).NodeName;
+                    if (checkAlreadyInTable(varName, table)) {
+                        System.out.println("Function already declared: " + varName);
+                        return;
+                    }
+                    newVar.oldName = varName;
+                    newVar.translatedName = "f" + node.id;
+                    table.put(node.id, newVar);
+                    stackOfTables.peek().put(node.id, newVar);
                 }
             }
         }
