@@ -22,6 +22,23 @@ public class SymbolTable {
         if (currNode == null) {
             return;
         }
+        else if(currNode.NodeName.equals("LOCVARS")){
+            HashMap<Integer, VariableProps> currTable = stackOfTables.peek();
+            for (Node node : currNode.childNodes) {
+                if (node.NodeName.equals("VNAME")) {
+                    VariableProps newVar = new VariableProps();
+                    String varName = node.childNodes.get(0).NodeName;
+                    if (checkAlreadyInTable(varName, table)) {
+                        System.out.println("Variable already declared: " + varName);
+                        return;
+                    }
+                    newVar.oldName = varName;
+                    newVar.translatedName = "v" + node.id;
+                    table.put(node.id, newVar);
+                    currTable.put(node.id, newVar);
+                }
+            }
+        }
         else if (currNode.NodeName.equals("PROG")){
             stackOfTables.push(new HashMap<>());
             for (Node node : currNode.childNodes) {
@@ -31,8 +48,17 @@ public class SymbolTable {
         else if (currNode.NodeName.equals("HEADER")){
             stackOfTables.push(new HashMap<>());
             for (Node node : currNode.childNodes) {
-                if (node.NodeName.equals("BODY")) {
-                    recGen(node);
+                if (node.NodeName.equals("VNAME")) {
+                    VariableProps newVar = new VariableProps();
+                    String varName = node.childNodes.get(0).NodeName;
+                    if (checkAlreadyInTable(varName, table)) {
+                        System.out.println("Variable already declared: " + varName);
+                        return;
+                    }
+                    newVar.oldName = varName;
+                    newVar.translatedName = "v" + node.id;
+                    table.put(node.id, newVar);
+                    stackOfTables.peek().put(node.id, newVar);
                 }
             }
         }
