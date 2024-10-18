@@ -33,7 +33,11 @@ public class RecSPLMain {
 
                 SymbolTable symbolTable = new SymbolTable();
                 symbolTable.generateFromTree(parser.headNode);
+<<<<<<< Updated upstream
                 symbolTable.printTable();
+=======
+               
+>>>>>>> Stashed changes
             } else {
                 System.out.println("Lexical Error: Unable to tokenize the input.");
             }

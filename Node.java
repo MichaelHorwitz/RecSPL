@@ -9,4 +9,12 @@ public class Node {
         this.NodeName = name;
         this.childNodes = new ArrayList<>(); // Initialize the childNodes list
     }
+    public Node getChild(String name) {
+        for (Node child : childNodes) {
+            if (child.NodeName.equals(name)) {
+                return child;
+            }
+        }
+        return null; // Return null if no matching child is found
+    }
 }

@@ -17,6 +17,10 @@ public class SymbolTable {
         }
         recGen(root);
     }
+
+    public HashMap<String, VariableProps> getTable() {
+        return table;
+    }
     // Used to recursively generate the table from the tree
     public void recGen(Node currNode){
         if (currNode == null) {
