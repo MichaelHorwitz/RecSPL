@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class SymbolTable {
     HashMap<Integer, VariableProps> table;
-    //ArrayList<HashMap<Integer, VariableProps>> listOfTables;
+    ArrayList<HashMap<Integer, VariableProps>> listOfTables;
     Stack<HashMap<Integer, VariableProps>> stackOfTables;
     public SymbolTable(){
         table = new HashMap<>();
@@ -18,9 +18,9 @@ public class SymbolTable {
         recGen(root);
     }
 
-    public HashMap<String, VariableProps> getTable() {
-        return table;
-    }
+   // public HashMap<String, VariableProps> getTable() {
+       // return table;
+    //}
     // Used to recursively generate the table from the tree
     public void recGen(Node currNode){
         if (currNode == null) {
