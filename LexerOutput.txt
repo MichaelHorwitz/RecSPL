@@ -1,5 +1,5 @@
 main
-num
+text
 V_secrets
 ,
 num
@@ -63,6 +63,10 @@ then
 begin
 print
 "Correct"
+;
+V_secrets
+=
+V_current
 ;
 end
 else

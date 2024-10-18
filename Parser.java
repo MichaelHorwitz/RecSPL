@@ -420,39 +420,54 @@ public boolean isValidAtomic() {
         }
     }
         
-public void ASSIGN(Node pNode) {  // ASSIGN ::= VNAME < input | VNAME = TERM
-    if (tokenList.size() > 0) {
-        VNAME(pNode);  // Parse the variable name (VNAME)
-
+    public void ASSIGN(Node pNode) {  // ASSIGN ::= VNAME < input | VNAME = TERM
         if (tokenList.size() > 0) {
-            String token = tokenList.get(0).name;
-
-            // Handle assignment with input: VNAME < input
-            if (token.equals("<")) {
-                tokenList.remove(0);  // Consume '<'
-
-                if (tokenList.size() > 0 && tokenList.get(0).name.equals("input")) {
+            Node assignNode = new Node("ASSIGN");  // Create a parent node for the assignment
+            pNode.childNodes.add(assignNode);  // Add the assignment node to the parent node
+    
+            Node vnameNode = new Node("VNAME");  // Create a node for the variable name
+            VNAME(vnameNode);  // Parse the variable name (VNAME)
+            assignNode.childNodes.add(vnameNode);  // Add the VNAME node to the assignment node
+    
+            if (tokenList.size() > 0) {
+                String token = tokenList.get(0).name;
+    
+                // Handle assignment with input: VNAME < input
+                if (token.equals("<")) {
+                    tokenList.remove(0);  // Consume '<'
                     Node inputNode = new Node("input");
                     inputNode.line = tokenList.get(0).line;
-                    pNode.childNodes.add(inputNode);
-                    tokenList.remove(0);  // Consume 'input'
-                } else {
-                    System.err.println("Syntax Error: Expected 'input' after '<'.");
+    
+                    if (tokenList.size() > 0 && tokenList.get(0).name.equals("input")) {
+                        assignNode.childNodes.add(inputNode);  // Add input node to the assignment
+                        tokenList.remove(0);  // Consume 'input'
+                    } else {
+                        System.err.println("Syntax Error: Expected 'input' after '<'.");
+                        System.exit(1);
+                    }
+                } 
+                // Handle assignment with a term: VNAME = TERM
+                else if (token.equals("=")) {
+                    tokenList.remove(0);  // Consume '='
+    
+                    // Create a node for the '=' operator
+                    Node equalNode = new Node("=");
+                    assignNode.childNodes.add(equalNode);  // Add '=' node to the assignment
+    
+                    // Parse the term after '='
+                    Node termNode = new Node("TERM");
+                    assignNode.childNodes.add(termNode); // Add a TERM node to the assignment
+    
+                    TERM(termNode);  // Parse the term
+                } 
+                else {
+                    System.err.println("Syntax Error: Expected '< input' or '=' after VNAME.");
                     System.exit(1);
                 }
-            } 
-            // Handle assignment with a term: VNAME = TERM
-            else if (token.equals("=")) {
-                tokenList.remove(0);  // Consume '='
-                TERM(pNode);  // Parse the term after '='
-            } 
-            else {
-                System.err.println("Syntax Error: Expected '< input' or '=' after VNAME.");
-                System.exit(1);
             }
         }
     }
-}
+    
 public void FNAME(Node pNode) {  // FNAME ::= a token of Token-Class F
   // Parse FNAME (function name)
 if (tokenList.size() > 0 && tokenList.get(0).name.matches("F_[a-z]([a-z0-9])*")) {
@@ -780,9 +795,9 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
     }
      
     public void FUNCTIONS(Node pNode) {
-        int i=0; 
-        System.out.println(" starting out "+ i );
-       i++;
+        
+      
+      
         if (tokenList.size() > 0 && (tokenList.get(0).name.equals("num") || tokenList.get(0).name.equals("void"))) {
             Node functionsNode = new Node("FUNCTIONS");
             pNode.childNodes.add(functionsNode);
@@ -792,10 +807,9 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
         // Nullable, so no else block is needed
     }
     public void DECL(Node pNode) {
-        int i=0; 
+       
         Node declNode = new Node("DECL");
-       System.out.println(" starting out "+ i );
-       i++;
+       
         pNode.childNodes.add(declNode);
         HEADER(declNode);  // Parse the header
         BODY(declNode);    // Parse the body
