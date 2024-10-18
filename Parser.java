@@ -381,15 +381,34 @@ public class Parser {
     }
     
     // Helper method to validate un-nested ATOMIC expressions
-public boolean isAtomic(String token) {
-    return token.matches("V_[a-z]([a-z0-9])*") || token.matches("[0-9]+");
-}
+    public boolean isAtomic(String token) {
+        // Define the regex patterns
+        String variablePattern = "V_[a-z]([a-z0-9]*)";       // Matches variable names
+        String numberPattern = "-?[0-9]+(\\.[0-9]+)?";       // Matches integers and decimals
+        String stringPattern = "\"[A-Z][a-z]{0,7}\"";         // Matches strings enclosed in double quotes
+    
+        // Check if the token matches any of the atomic patterns
+        return token.matches(variablePattern) || 
+               token.matches(numberPattern) || 
+               token.matches(stringPattern);
+    }
+    
 
     // Helper method to validate un-nested ATOMIC expressions
-public boolean isValidAtomic() {
-    String token = tokenList.get(0).name;
-    return token.matches("V_[a-z][a-z0-9]*") || token.matches("[0-9]+");
-}
+    public boolean isValidAtomic() {
+        String token = tokenList.get(0).name;
+    
+        // Define the regex patterns
+        String variablePattern = "V_[a-z]([a-z0-9]*)";       // Matches variable names
+        String numberPattern = "-?[0-9]+(\\.[0-9]+)?";       // Matches integers and decimals
+        String stringPattern = "\"[A-Z][a-z]{0,7}\"";         // Matches strings enclosed in double quotes
+    
+        // Check if the token matches any of the atomic patterns
+        return token.matches(variablePattern) || 
+               token.matches(numberPattern) || 
+               token.matches(stringPattern);
+    }
+    
 
     private void parseUnNestedAtomic(Node pNode) {
         if (tokenList.size() > 0) {
