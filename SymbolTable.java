@@ -56,7 +56,24 @@ public class SymbolTable {
         }
         else if (currNode.NodeName.equals("HEADER")){
             stackOfTables.push(new HashMap<>());
+            String lastFType = "";
             for (Node node : currNode.childNodes) {
+                if (node.NodeName.equals("FTYP")) {
+                    lastFType = node.childNodes.get(0).NodeName;
+                }
+                if (node.NodeName.equals("FNAME")) {
+                    VariableProps fVar = new VariableProps();
+                    String fName = node.childNodes.get(0).NodeName;
+                    if (checkAlreadyInTable(fName, table)) {
+                        System.out.println("Function already declared: " + fName);
+                        return;
+                    }
+                    fVar.oldName = fName;
+                    fVar.translatedName = "f" + node.id;
+                    fVar.varType = lastFType;
+                    table.put(node.id, fVar);
+                    stackOfTables.peek().put(node.id, fVar);
+                }
                 if (node.NodeName.equals("VNAME")) {
                     VariableProps newVar = new VariableProps();
                     String varName = node.childNodes.get(0).NodeName;
@@ -91,6 +108,9 @@ public class SymbolTable {
                     newVar.varType = lastType;
                     table.put(node.id, newVar);
                     currTable.put(node.id, newVar);
+                }
+                else if(node.NodeName.equals( "GLOBVARS")){
+                    recGen(node);
                 }
             }
         } else if (currNode.NodeName.equals("ASSIGN")) {
