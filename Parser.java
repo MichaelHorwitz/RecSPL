@@ -444,9 +444,8 @@ public class Parser {
             Node assignNode = new Node("ASSIGN");  // Create a parent node for the assignment
             pNode.childNodes.add(assignNode);  // Add the assignment node to the parent node
     
-            Node vnameNode = new Node("VNAME");  // Create a node for the variable name
-            VNAME(vnameNode);  // Parse the variable name (VNAME)
-            assignNode.childNodes.add(vnameNode);  // Add the VNAME node to the assignment node
+            // Parse the variable name (VNAME)
+            VNAME(assignNode);  // Parse the variable name and add it to the assignNode (single nesting)
     
             if (tokenList.size() > 0) {
                 String token = tokenList.get(0).name;
@@ -454,6 +453,7 @@ public class Parser {
                 // Handle assignment with input: VNAME < input
                 if (token.equals("<")) {
                     tokenList.remove(0);  // Consume '<'
+    
                     Node inputNode = new Node("input");
                     inputNode.line = tokenList.get(0).line;
     
@@ -475,7 +475,7 @@ public class Parser {
     
                     // Parse the term after '='
                     Node termNode = new Node("TERM");
-                    assignNode.childNodes.add(termNode); // Add a TERM node to the assignment
+                    assignNode.childNodes.add(termNode);  // Add the TERM node to the assignment
     
                     TERM(termNode);  // Parse the term
                 } 
@@ -486,6 +486,10 @@ public class Parser {
             }
         }
     }
+    
+                    // Consume '='
+    
+                    // Create a node for the '=' operator
     
 public void FNAME(Node pNode) {  // FNAME ::= a token of Token-Class F
   // Parse FNAME (function name)

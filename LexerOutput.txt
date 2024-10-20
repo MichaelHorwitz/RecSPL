@@ -10,7 +10,7 @@ V_bd
 ,
 begin
 print
-V_scret
+V_secret
 ;
 V_secret
 =

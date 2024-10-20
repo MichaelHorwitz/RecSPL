@@ -8,7 +8,7 @@ main
     
      
 begin
-    print V_scret;
+    print V_secret;
     V_secret =3 ;
    
     

@@ -16,6 +16,7 @@ public class SymbolTable {
             return;
         }
         recGen(root);
+        typeCheck(root);
     }
 
    // public HashMap<String, VariableProps> getTable() {
@@ -166,6 +167,112 @@ public class SymbolTable {
             }
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+//***************************************type checking************************
+
+
+public boolean typeCheck(Node root) {
+    if (root == null) {
+        return false; // Handle null case
+    }
+    
+    // Ensure we're processing the PROG node
+    if (root.NodeName.equals("PROG")) {
+        System.out.println("Type checking PROG");
+
+        // Loop through the children of PROG
+        for (Node child : root.childNodes) {
+            if (child.NodeName.equals("GLOBVARS")) {
+                // Type check each GLOBVARS node
+                if (!typeCheckGLOVARS1(child)) {
+                    return false; // Return false if any GLOBVARS fails
+                }
+            }
+        }
+        return true; // All GLOBVARS passed type checking
+    }
+    
+    System.out.println("Error: Expected PROG node, found: " + root.NodeName);
+    return false;
+}
+
+private boolean typeCheckGLOVARS1(Node globVarsNode) {
+    String varName = null;
+    String varType = null;
+
+    // Ensure we are processing only a GLOBVARS node
+    if (!globVarsNode.NodeName.equals("GLOBVARS")) {
+        System.out.println("Error: Expected GLOBVARS node, found: " + globVarsNode.NodeName);
+        return false;
+    }
+
+    // Loop through the child nodes of the GLOBVARS node
+    for (Node child : globVarsNode.childNodes) {
+        if (child.NodeName.equals("VTYP")) {
+            varType = getChildValue(child).trim();
+            while (varType.endsWith(":")) {
+                varType = varType.substring(0, varType.length() - 1);
+            }
+            System.out.println("Variable TYPE: " + varType);
+        } 
+        else if (child.NodeName.equals("VNAME")) {
+            varName = getChildValue(child).trim();
+            while (varName.endsWith(":")) {
+                varName = varName.substring(0, varName.length() - 1);
+            }
+            System.out.println("Variable NAME: " + varName);
+            
+            // Check the type in the symbol table for this specific variable
+            //VariableProps varProps = table.get(0);
+              
+               
+            // Ensure varProps is not null and check for type match
+           // if (varProps == null || !varProps.varType.equals(varType)) {
+              //  System.out.println("table has this" varProps.getType()+ "expecting this"+varType);
+               // System.out.println("Type mismatch for variable: " + varName);
+               // return false; // Type mismatch
+          //  }
+       // }
+    //}
+
+   // All variables passed the type check
+}
+
+    }
+
+    return true; 
+
+}
+
+
+
+
+
+
+
+
+
+
+private String getChildValue(Node node) {
+    // Assuming the child node contains text or other sub-nodes that represent the value
+    if (node.childNodes.size() > 0) {
+        return node.childNodes.get(0).NodeName; // Modify based on your node structure
+    }
+    return "";
+}
+
     public boolean checkAlreadyInTable(String newVarName, HashMap<Integer, VariableProps> table){
         for (VariableProps varProps : table.values()) {
             if (varProps.oldName.equals(newVarName)) {
