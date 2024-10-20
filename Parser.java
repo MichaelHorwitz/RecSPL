@@ -422,7 +422,7 @@ public class Parser {
                 tokenList.remove(0);  // Consume the VNAME
             } 
             // Handle CONST (numeric constants or string literals)
-            else if (token.matches("[0-9]+") || token.matches("\"[^\"]*\"")) {
+            else if (token.matches("-?[0-9]+(\\.[0-9]+)?") || token.matches("\"[A-Z][a-z]{0,7}\"")) {
                 Node constNode = new Node("CONST");
                 constNode.childNodes.add(new Node(token));  // Add the constant value as a child node
                 pNode.childNodes.add(constNode);

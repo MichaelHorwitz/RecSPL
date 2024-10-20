@@ -1,11 +1,14 @@
 import java.util.HashMap;
-import java.io.FileWriter;
-import java.io.IOException;
+
 import java.util.List;
 
 
 
+import java.io.FileWriter;
+import java.io.IOException;
+
 import java.util.ArrayList;
+import java.util.Stack;
 class SymbolTable2 {
 
     ArrayList<SymbolNode> varTable=new ArrayList<SymbolNode>();   //A list of variables
@@ -13,7 +16,7 @@ class SymbolTable2 {
     StringBuilder htmlContent = new StringBuilder();
     Node parseTree;
     static String scope="MAIN";
-
+    Stack<String> scopeStack = new Stack<>();
     public SymbolTable2(Node tree){
         this.parseTree=tree;
     } 
@@ -29,32 +32,41 @@ class SymbolTable2 {
                 ALGO(child);
             }
             else if(child.NodeName.equals("FUNCTIONS")){
-               FUNCTIONS(child);
+              FUNCTIONS(child);
             }
         } 
 
-        SymbolTablesToHtml("SymbolTable.html");
+         SymbolTablesToHtml("SymbolTable.html");
 }
 private void GLOBVARS(Node globvars) {
     String name = null;
     String type = null;
+
     // Debug output and process each child node
     for (Node child : globvars.childNodes) {
         if (child.NodeName.equals("VTYP")) {
-            // Retrieve the type directly (assuming it's the first child node's value)
-            type = getChildValue(child); // Extract the type value
+            // Retrieve the type and clean it by trimming whitespace and removing trailing semicolons
+            type = getChildValue(child).trim(); // Clean leading/trailing whitespace
+            while (type.endsWith(":")) { // Remove all trailing semicolons
+                type = type.substring(0, type.length() - 1);
+            }
             System.out.println("Type: " + type); // Debug output
         } else if (child.NodeName.equals("VNAME")) {
-            // Retrieve the variable name directly (assuming it's the first child node's value)
-            name = getChildValue(child); // Extract the name value
+            // Clean the variable name by trimming whitespace and removing trailing colons
+            name = getChildValue(child).trim();
+            while (name.endsWith(":")) { // Remove all trailing colons
+                name = name.substring(0, name.length() - 1);
+            }
+
             System.out.println("Name: " + name); // Debug output
             
-            // Create a SymbolNode with the name and other attributes
+            // Create a SymbolNode with the cleaned name and type
             SymbolNode node = new SymbolNode(name, false, scope);
+            node.type = type;
             
             // Check if the variable already exists in the current scope
             if (!variableLookUp(node.name, scope)) {
-                varTable.add(node); // Add to the variable table if it doesn't exist
+                varTable.add(node);
             } else {
                 // Output semantic error and exit if the variable already exists
                 System.err.println("Semantic Error: Variable with the name " + node.name + " already exists in scope " + scope);
@@ -63,6 +75,9 @@ private void GLOBVARS(Node globvars) {
         }
     }
 }
+
+
+
 
 
   
@@ -140,7 +155,7 @@ public void COMMAND(Node command) {
             ASSIGN(child); // Process assignment
         } else if (child.NodeName.equals("CALL")) {
             System.out.println("Processing CALL");
-
+             CALL(child);
             // Ensure CALL node contains function name and arguments
             Node functionNameNode = null;
             List<Node> argumentNodes = new ArrayList<>();
@@ -166,7 +181,7 @@ public void COMMAND(Node command) {
                 System.err.println("Error: CALL missing function name or arguments.");
             }
         } else if (child.NodeName.equals("BRANCH")) {
-            BRANCH(child); // Process BRANCH
+          //  BRANCH(child); // Process BRANCH
         } else {
             System.err.println("Unknown command: " + child.NodeName);
         }
@@ -175,74 +190,81 @@ public void COMMAND(Node command) {
 
 
 public void ATOMIC(Node atomic) {
-    for (Node child : atomic.childNodes) {
-        System.out.println("I'm ATOMIC's child: " + child.NodeName); 
+    if (atomic.childNodes != null) {
         
-        if (child.NodeName.equals("VNAME")) {
-            if (child.childNodes.size() > 0) {
-                String variableName = getChildValue(child); // Correctly fetch the variable name
-              //  // Debug output
-                //System.out.println("Checking existence of variable: " + variableName + " in scope: " + scope);
+
+        // Proceed with the existing logic for ATOMIC nodes
+        for (Node child : atomic.childNodes) {
+            String variableName = child.NodeName.trim();  // Ensure variable name is trimmed
+            System.out.println("Checking if variable '" + variableName + "' exists in the scope '" + scope + "'.");
+
+            // Check if the name follows the variable naming pattern (e.g., V_varName)
+            if (variableName.matches("V_[a-z]([a-z0-9])*")) {
                 // Check if the variable exists in the symbol table
-                if (variableExists(variableName, scope)) {
-                  //  System.out.println("Variable " + variableName + " exists in the symbol table.");
+                boolean exists = variableExists(variableName, scope);
+
+                // Output the result of the variable existence check
+                if (exists) {
+                    System.out.println("Variable '" + variableName + "' exists in the scope '" + scope + "'.");
                 } else {
-                  //  System.out.println("Variable " + variableName + " does not exist in the symbol table.");
-                    System.exit(1);
-                    // Handle the case where the variable does not exist (e.g., throw an error)
+                    System.out.println("Variable '" + variableName + "' does NOT exist in the scope '" + scope + "'.");
+                    System.exit(1);  // Exit if the variable does not exist
                 }
-            }
-        } 
-        else if (child.NodeName.equals("CONST")) {
-            if (child.childNodes.size() > 0) {
-                String constantValue = getChildValue(child); // Get the constant value correctly
+            } else if (child.NodeName.matches("-?[0-9]+(\\.[0-9]+)?") || child.NodeName.matches("\"[A-Z][a-z]{0,7}\"")) {
+                String constantValue = getChildValue(child);  // Get the constant value
                 System.out.println("Constant value found: " + constantValue);
+            } else {
+                System.out.println("Unexpected NodeName: " + child.NodeName);
             }
         }
     }
-   
 }
+
 
 
 
  
 
- public void ASSIGN(Node assign) {
-    // Variables to store VNAME and the assignment type
+public void ASSIGN(Node assign) {
     String vname = null;
-    boolean isInputAssignment = false;
     boolean isTermAssignment = false;
-         System.err.println("entering assign");
-    // Parse the children of the 'assign' node
+
+    System.err.println("Entering ASSIGN");
+
+    // Step 1: Find the VNAME (variable name)
     for (Node child : assign.childNodes) {
-        // Step 1: Find the VNAME (variable name)
         if (child.NodeName.equals("VNAME")) {
-            vname = getChildValue(child);  // Extract the variable name (VNAME)
-            System.out.println("Variable Name: " + vname);
+            // Assuming the actual name is a child of VNAME
+            if (!child.childNodes.isEmpty()) {
+                // Extract and clean the variable name (VNAME)
+                vname = getChildValue(child.childNodes.get(0)).trim(); // Clean leading/trailing whitespace
+                while (vname.endsWith(":")) { // Remove all trailing colons
+                    vname = vname.substring(0, vname.length() - 1);
+                }
+                System.out.println("Variable Name: " + vname);
+            }
         }
 
-        // Step 2: Check if it's an input assignment or term assignment
-        if (child.NodeName.equals("INPUT_TOKEN")) {  // Assuming "INPUT_TOKEN" represents '< input'
-            isInputAssignment = true;  // Detect input assignment
-        } else if (child.NodeName.equals("TERM")) {
-            isTermAssignment = true;  // Detect term assignment
-            TERM(child);  // Call the TERM parsing method for deep nesting
+        // Step 2: Detect term assignment
+        if (child.NodeName.equals("TERM")) {
+            isTermAssignment = true;
+            TERM(child); // Process the term assignment
         }
     }
 
-    // Step 3: Handle Input Assignment (VNAME < input)
-    if (isInputAssignment) {
-        // No runtime input, just handle the assignment as per grammar
-        assignVariable(vname, "<input>");
-        System.out.println("Assigned '< input>' to " + vname);
+    // Step 3: Check if the variable has been declared
+    if (vname != null && !variableExists(vname, scope)) {
+        System.err.println("Semantic Error: Variable " + vname + " must be declared before assignment.");
+        System.exit(1);
     }
 
     // Step 4: Handle Term Assignment (VNAME = TERM)
     if (isTermAssignment) {
-        // TERM processing is handled in the TERM method
+        // Process TERM in the TERM method
         System.out.println("Assigned TERM to " + vname);
     }
 }
+
 
 // Helper method to handle TERM
 private void TERM(Node termNode) {
@@ -262,155 +284,7 @@ private void TERM(Node termNode) {
     }
 }
 
-public void BRANCH(Node branch) {
-    Node condNode = null;
-    Node thenAlgoNode = null;
-    Node elseAlgoNode = null;
-    boolean isThen = false;
-    boolean isElse = false;
 
-    // Step 1: Parse the child nodes to identify COMPOSIT or SIMPLE as the condition, then ALGO in 'then' and 'else'
-    for (Node child : branch.childNodes) {
-        if (child.NodeName.equals("COMPOSIT") || child.NodeName.equals("SIMPLE")) {
-            condNode = child;  // Assign the condition node
-        } else if (child.NodeName.equals("then")) {
-            isThen = true;  // Now expect the next ALGO node to be part of 'then'
-            isElse = false;
-        } else if (child.NodeName.equals("else")) {
-            isElse = true;  // Now expect the next ALGO node to be part of 'else'
-            isThen = false;
-        } else if (child.NodeName.equals("ALGO")) {
-            if (isThen) {
-                thenAlgoNode = child;  // Assign the ALGO for the 'then' part
-            } else if (isElse) {
-                elseAlgoNode = child;  // Assign the ALGO for the 'else' part
-            }
-        }
-    }
-
-    // Ensure that the condition node is not null before proceeding
-    if (condNode == null) {
-        throw new RuntimeException("Error: Condition node is missing in BRANCH");
-    }
-
-    // Step 2: Process the condition
-    boolean conditionResult = COND(condNode);  // This will return true or false based on the evaluation of COMPOSIT or SIMPLE
-
-    // Step 3: Execute the appropriate ALGO based on the condition result
-    if (conditionResult) {
-        System.out.println("Condition is TRUE, executing THEN branch");
-        ALGO(thenAlgoNode);  // Execute the 'then' ALGO
-    } else {
-        System.out.println("Condition is FALSE, executing ELSE branch");
-        ALGO(elseAlgoNode);  // Execute the 'else' ALGO
-    }
-}
-
-
-// Method to evaluate the COND node
-public boolean COND(Node cond) {
-    for (Node child : cond.childNodes) {
-        if (child.NodeName.equals("SIMPLE")) {
-            return SIMPLE(child);  // Evaluate simple conditions
-        } else if (child.NodeName.equals("COMPOSIT")) {
-            return COMPOSIT(child);  // Evaluate composite conditions
-        }
-    }
-    return false;  // Default return if no condition is matched
-}
-
-// Method to evaluate SIMPLE conditions (BINOP with ATOMIC terms)
-public boolean SIMPLE(Node simple) {
-    String operator = "";
-    String arg1 = "", arg2 = "";
-    
-    for (Node child : simple.childNodes) {
-        if (child.NodeName.equals("BINOP")) {
-            operator = getChildValue(child);  // Get the binary operator (eq, grt, etc.)
-        } else if (child.NodeName.equals("ATOMIC")) {
-            if (arg1.isEmpty()) {
-                arg1 = getChildValue(child);  // Get the first atomic value
-            } else {
-                arg2 = getChildValue(child);  // Get the second atomic value
-            }
-        }
-    }
-    
-    // Evaluate the binary operator on the atomic arguments
-    return evaluateBinop(operator, arg1, arg2);
-}
-
-// Method to evaluate COMPOSIT conditions (nested SIMPLE or UNOP)
-public boolean COMPOSIT(Node composit) {
-    String operator = "";
-    boolean simple1Result = false, simple2Result = false;
-
-    for (Node child : composit.childNodes) {
-        if (child.NodeName.equals("BINOP")) {
-            operator = getChildValue(child);  // Get the binary operator (and, or, etc.)
-        } else if (child.NodeName.equals("SIMPLE")) {
-            if (!simple1Result) {
-                simple1Result = SIMPLE(child);  // Evaluate first SIMPLE condition
-            } else {
-                simple2Result = SIMPLE(child);  // Evaluate second SIMPLE condition
-            }
-        } else if (child.NodeName.equals("UNOP")) {
-            return UNOP(child);  // Evaluate unary operator on SIMPLE condition
-        }
-    }
-
-    // Evaluate the binary operator on the two simple results
-    return evaluateBinop(operator, simple1Result, simple2Result);
-}
-
-// Method to evaluate UNOP (like not, sqrt)
-public boolean UNOP(Node unop) {
-    String operator = "";
-    boolean simpleResult = false;
-    
-    for (Node child : unop.childNodes) {
-        if (child.NodeName.equals("UNOP")) {
-            operator = getChildValue(child);  // Get the unary operator (not, sqrt)
-        } else if (child.NodeName.equals("SIMPLE")) {
-            simpleResult = SIMPLE(child);  // Evaluate the SIMPLE condition
-        }
-    }
-    
-    // Evaluate the unary operator on the simple result
-    return evaluateUnop(operator, simpleResult);
-}
-
-// Helper method to evaluate binary operators (and, or, eq, grt, etc.)
-// Helper method to evaluate binary operators
-private boolean evaluateBinop(String operator, Object arg1, Object arg2) {
-    switch (operator) {
-        case "eq":
-            return arg1.toString().equals(arg2.toString());  // String comparison
-        case "grt":
-            return Integer.parseInt(arg1.toString()) > Integer.parseInt(arg2.toString());  // Numeric comparison
-        case "and":
-            return (boolean)arg1 && (boolean)arg2;  // Boolean AND
-        case "or":
-            return (boolean)arg1 || (boolean)arg2;  // Boolean OR
-        // Add other BINOP cases here (like add, sub for numeric operations)
-        default:
-            return false;
-    }
-}
-
-
-// Helper method to evaluate unary operators (not, sqrt)
-private boolean evaluateUnop(String operator, boolean simpleResult) {
-    switch (operator) {
-        case "not":
-            return !simpleResult;
-        // Add other UNOP cases here (like sqrt if needed)
-        default:
-            return false;
-    }
-}
-
-// Helper method to assign a value to a variable (can update your symbol table or other storage)
 private void assignVariable(String vname, String value) {
     // Assign the value to the variable in your symbol table or runtime environment
     // Example: varTable.put(vname, value); 
@@ -423,129 +297,8 @@ private void assignVariable(String vname, String value) {
 
 
 
-private void FUNCTIONS(Node functions) {
-   
-    
-    // Loop through each child node in FUNCTIONS
-    for (Node child : functions.childNodes) {
-{
-           
-       
-        if (child.NodeName.equals("DECL")) {
-            System.out.println("Processing FUNCTIONS node...");
-            DECL(child);
-        }
-    }
-}
-}
-private void DECL(Node decl) {
-    String functionName = null;
-    String returnType = null;
-    Node header = null;
-    Node body = null;
-    String parentScope = scope; // Track the parent scope before opening a new one for the function
 
-    // Process the child nodes in DECL to get HEADER, FNAME, and BODY
-    for (Node child : decl.childNodes) {
-        if (child.NodeName.equals("HEADER")) {
-            header = child; // Capture HEADER node for processing
-        } else if (child.NodeName.equals("FNAME")) {
-            functionName = getChildValue(child);
-        } else if (child.NodeName.equals("BODY")) {
-            body = child; // Capture BODY node for later processing
-        }
-    }
 
-    // Ensure the function name is provided in FNAME
-    if (functionName == null) {
-        System.err.println("Semantic Error: Function name is missing");
-        System.exit(1);
-    }
-
-    // Ensure function name does not conflict with parent or sibling scopes
-    if (scopeHasConflictingFunction(functionName, parentScope)) {
-        System.err.println("Semantic Error: Function " + functionName + " cannot have the same name as its parent or sibling scope");
-        System.exit(1);
-    }
-
-    // Apply Semantic Rule: No recursive call to MAIN
-    if (functionName.equals("main") && scope.equals("main")) {
-        System.err.println("Semantic Error: Recursive call to MAIN is not allowed");
-        System.exit(1);
-    }
-
-    // Create a new function node and add it to the procTable
-    SymbolNode funcNode = new SymbolNode(functionName, true, scope);
-    funcNode.type = returnType; // Set the return type
-
-    // Add the function node to the procedure table (procTable)
-    procTable.add(funcNode);
-
-    // Open a new scope for the function
-    scope = functionName;
-
-    // Process the function body if provided
-    if (body != null) {
-        BODY(body); // Process the BODY node
-    } else {
-        System.err.println("Semantic Error: Function " + functionName + " is missing a BODY");
-        System.exit(1);
-    }
-
-    // Restore the previous scope
-    scope = parentScope;
-}
-private void BODY(Node body) {
-    Node prolog = null;
-    Node locvars = null;
-    Node algo = null;
-    Node epilog = null;
-    Node subfuncs = null;
-
-    // Process the body node
-    for (Node child : body.childNodes) {
-        if (child.NodeName.equals("PROLOG")) {
-            prolog = child; // Store prolog node
-        } else if (child.NodeName.equals("LOCVARS")) {
-            locvars = child; // Store locvars node
-        } else if (child.NodeName.equals("ALGO")) {
-            algo = child; // Store algo node
-        } else if (child.NodeName.equals("EPILOG")) {
-            epilog = child; // Store epilog node
-        } else if (child.NodeName.equals("SUBFUNCS")) {
-            subfuncs = child; // Store subfunctions node
-        }
-    }
-
-    // Process PROLOG
-    if (prolog != null) {
-        // Assuming PROLOG is just a curly brace, handle if necessary
-        // e.g., System.out.println("Entering function scope"); or similar actions
-    }
-
-    // Process LOCVARS
-    if (locvars != null) {
-        processLocVars(locvars);
-    }
-
-    // Process ALGO
-    if (algo != null) {
-        // Implement your logic for processing algorithmic statements/commands here
-        ALGO(algo); // Placeholder for algo processing
-    }
-
-    // Process EPILOG
-    if (epilog != null) {
-        // Assuming EPILOG is just a curly brace, handle if necessary
-        // e.g., System.out.println("Exiting function scope"); or similar actions
-    }
-
-    // Process SUBFUNCS
-    if (subfuncs != null) {
-        // Handle subfunctions as needed
-        FUNCTIONS(subfuncs); // Assuming FUNCTIONS is implemented to handle this
-    }
-}
 private void CALL(Node callNode) {
     String functionName = null;
     List<String> arguments = new ArrayList<>();
@@ -596,44 +349,6 @@ private SymbolNode findFunctionDeclaration(String functionName) {
     return null; // Function not found
 }
 
-private void processLocVars(Node locvars) {
-    // Expecting a comma-separated list of VTYP VNAME pairs
-    for (int i = 0; i < locvars.childNodes.size(); i++) {
-        Node child = locvars.childNodes.get(i);
-        
-        // Check for VTYP
-        if (child.NodeName.equals("VTYP")) {
-            String type = getChildValue(child); // Extract variable type
-
-            // Expect the next sibling to be VNAME
-            Node nameNode = (i + 1 < locvars.childNodes.size()) ? locvars.childNodes.get(i + 1) : null;
-
-            if (nameNode != null && nameNode.NodeName.equals("VNAME")) {
-                String name = getChildValue(nameNode); // Extract variable name
-                SymbolNode localVarNode = new SymbolNode(name, false, scope);
-
-                // Check for variable existence in the current scope
-                if (!variableLookUp(localVarNode.name, scope)) {
-                    varTable.add(localVarNode); // Add local variable to the variable table
-                } else {
-                    System.err.println("Semantic Error: Variable " + localVarNode.name + " already exists in scope " + scope);
-                    System.exit(1);
-                }
-
-                // Skip the next nameNode since we've processed it
-                i++; 
-            }
-        }}
-    }
-    private boolean scopeHasConflictingFunction(String functionName, String parentScope) {
-        // Check the parent scope for function name conflicts
-        for (SymbolNode node : procTable) {
-            if (node.name.equals(functionName) && node.scope.equals(parentScope)) {
-                return true; // Conflict found
-            }
-        }
-        return false;
-    }
 
 
 
@@ -673,17 +388,97 @@ public boolean variableLookUp(String name, String scope) {
 }
 
 
-public boolean variableExists(String name,String scope){
-    for(int i=varTable.size()-1;i>=0;i--){   //Since we are checking variable scopes,the last declared variable with local scope will be towards the end
-        SymbolNode s=varTable.get(i);
-        if(s.name.equals(name)){
-            if(s.scope.equals(scope) || s.scope.equals("MAIN")){
+public boolean variableExists(String name, String scope) {
+    for (int i = varTable.size() - 1; i >= 0; i--) {
+        SymbolNode s = varTable.get(i);
+        
+        // Trim any leading/trailing spaces or characters in the name
+        String storedName = s.name.trim();
+        String currentScope = s.scope.trim();
+        String currentName = name.trim();  // Also trim the name being checked
+        
+        // Check if the variable name matches
+        if (storedName.equals(currentName)) {
+            // Check if it matches the current scope or the global scope (MAIN)
+           
                 return true;
             }
-        }
+        
     }
     return false;
 }
+
+public void FUNCTIONS(Node functionsNode) {
+    // Process each function declaration
+    for (Node funcChild : functionsNode.childNodes) {
+       
+            String functionName = null;
+            String functionType = null;
+            List<String> incomingParams = new ArrayList<>();
+            List<SymbolNode> localVars = new ArrayList<>();
+            
+            for (Node headerChild : funcChild.childNodes) {
+                if (headerChild.NodeName.equals("HEADER")) {
+                    // Extract function type and name
+                    functionType = getChildValue(headerChild.childNodes.get(0)); // FTYP
+                    functionName = getChildValue(headerChild.childNodes.get(1)); // FNAME
+                    
+                    // Assuming that the incoming parameters follow in a specific node
+                    Node paramsNode = headerChild.childNodes.get(2); // Adjust index as necessary
+                    for (Node param : paramsNode.childNodes) {
+                        if (param.NodeName.equals("VNAME")) {
+                            String paramName = getChildValue(param).trim();
+                            incomingParams.add(paramName);
+                        }
+                    }
+                } else if (headerChild.NodeName.equals("BODY")) {
+                    // Process the body of the function
+                    processFunctionBody(headerChild, localVars);
+                }
+            }
+
+            // Store function information in the procedure table
+            SymbolNode functionNode = new SymbolNode(functionName, true, scope);
+            functionNode.type = functionType;
+            procTable.add(functionNode);
+
+            // Add incoming parameters as local variables
+            for (String param : incomingParams) {
+                SymbolNode localNode = new SymbolNode(param, false, scope);
+                localVars.add(localNode);
+            }
+        
+    }
+}
+
+private void processFunctionBody(Node bodyNode, List<SymbolNode> localVars) {
+    for (Node bodyChild : bodyNode.childNodes) {
+        if (bodyChild.NodeName.equals("PROLOG")) {
+            // Handle prolog if necessary (e.g., setup)
+        } else if (bodyChild.NodeName.equals("LOCVARS")) {
+            // Process local variable declarations
+            for (Node locVarChild : bodyChild.childNodes) {
+                if (locVarChild.NodeName.equals("VTYP")) {
+                    String localType = getChildValue(locVarChild).trim();
+                    // Assuming the local variable names are defined next
+                    for (Node localNameChild : locVarChild.childNodes) {
+                        String localName = getChildValue(localNameChild).trim();
+                        SymbolNode localNode = new SymbolNode(localName, false, scope);
+                        localNode.type = localType;
+                        localVars.add(localNode);
+                    }
+                }
+            }
+        } else if (bodyChild.NodeName.equals("ALGO")) {
+            ALGO(bodyChild); // Process the ALGO section
+        } else if (bodyChild.NodeName.equals("EPILOG")) {
+            // Handle epilog if necessary
+        } else if (bodyChild.NodeName.equals("SUBFUNCS")) {
+            FUNCTIONS(bodyChild); // Recursively process any sub-functions
+        }
+    }
+}
+
 public void printTables(){
 
     //print Vtable

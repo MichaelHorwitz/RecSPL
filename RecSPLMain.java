@@ -34,11 +34,11 @@ public class RecSPLMain {
                 }
 
                 SymbolTable symbolTable = new SymbolTable();
-                //symbolTable.generateFromTree(parser.headNode);
-                //symbolTable.printTable();
+            symbolTable.generateFromTree(parser.headNode);
+                symbolTable.printTable();
                
-               SymbolTable2 TC = new SymbolTable2(parser.headNode);
-                TC.addSymbols();
+             //  SymbolTable2 TC = new SymbolTable2(parser.headNode);
+               // TC.addSymbols();
             } else {
                 System.out.println("Lexical Error: Unable to tokenize the input.");
             }
