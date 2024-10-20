@@ -1,0 +1,14 @@
+public class SymbolNode {
+    String name;
+    boolean used;  //checks if the variable is used or not
+    String scope;
+    String type;
+    boolean defined;  //for procedures
+    String transName;
+
+    public SymbolNode(String name,boolean used,String scope){
+        this.name=name;
+        this.used=used;
+        this.scope=scope;
+    }
+}

@@ -160,4 +160,10 @@ public class SymbolTable {
             System.out.println("ID: " + key + ", Old Name: " + varProps.oldName + ", Translated Name: " + varProps.translatedName + ", Type: " + varProps.varType);
         }
     }
+
+   public  HashMap<Integer, VariableProps> getmap(){
+
+        return this.table;
+
+    }
 }

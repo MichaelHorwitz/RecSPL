@@ -9,12 +9,16 @@ public class Node {
         this.NodeName = name;
         this.childNodes = new ArrayList<>(); // Initialize the childNodes list
     }
-    public Node getChild(String name) {
+    @Override
+    public String toString() {
+        // Return the name of the node along with its child values
+        StringBuilder sb = new StringBuilder();
+        sb.append(NodeName).append(": ");
         for (Node child : childNodes) {
-            if (child.NodeName.equals(name)) {
-                return child;
-            }
+            sb.append(child.toString()).append(" "); // Recursively add child node strings
         }
-        return null; // Return null if no matching child is found
+        return sb.toString().trim(); // Remove any trailing spaces
     }
+
+    
 }

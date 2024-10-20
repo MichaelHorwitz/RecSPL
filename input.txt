@@ -1,25 +1,34 @@
 main
     num V_secret ,
     num V_current ,
+    text V_bd,
+    
+     
 begin
-    print "Secret" ;
-    V_secret <input ;
-    F_next(0,0,0) ;
+    print V_secret ;
+    V_secret =3 ;
+    V_current=3;
+    
+    
+   
 end
 
 void F_next(V_a,V_b,V_c) {
-    num V_d , num V_e , num V_f ,
+     text V_d, num V_e ,  num V_er,
     begin
         F_guess(0,0,0) ;
+         F_gu(0,2,0) ;
         if eq ( V_current , V_secret ) then
         begin
             print "Correct" ;
         end
         else
         begin
-            F_next(0,0,0) ;
+            F_banda(0,0,0) ;
+            V_secret= "Car";
         end ;
     end
     }
+    
 end
 
