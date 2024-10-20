@@ -141,7 +141,13 @@ public class SymbolTable {
     public void printTable() {
         for (Integer key : table.keySet()) {
             VariableProps varProps = table.get(key);
-            System.out.println("ID: " + key + ", Old Name: " + varProps.oldName + ", Translated Name: " + varProps.translatedName);
+            System.out.println("ID: " + key + ", Type: " + varProps.getType() + ", Translated Name: " + varProps.translatedName);
         }
+    }
+
+   public  HashMap<Integer, VariableProps> getmap(){
+
+        return this.table;
+
     }
 }

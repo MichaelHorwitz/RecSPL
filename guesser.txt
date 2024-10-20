@@ -21,8 +21,8 @@ void F_next(V_a,V_b,V_c) {
         end ;
     end
     }
-    void F_guess(V_g,V_h,V_i) {
-        num V_j , num V_k , num V_l ,
+    void F_next(V_g,V_h,V_i) {
+        num V_d, num V_k , num V_l ,
         begin
             print "Guess" ;
             V_current <input ;

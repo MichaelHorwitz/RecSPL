@@ -1,6 +1,8 @@
 import java.io.FileWriter;
 import java.io.IOException;
-
+import java.util.HashMap;
+import java.util.Stack;
+import java.util.ArrayList;
 public class RecSPLMain {
     public static void main(String[] args) {
         RecSPLLexer lexer = new RecSPLLexer(); // Create a lexer instance
@@ -32,8 +34,11 @@ public class RecSPLMain {
                 }
 
                 SymbolTable symbolTable = new SymbolTable();
-                symbolTable.generateFromTree(parser.headNode);
-                symbolTable.printTable();
+                //symbolTable.generateFromTree(parser.headNode);
+                //symbolTable.printTable();
+               
+               SymbolTable2 TC = new SymbolTable2(parser.headNode);
+                TC.addSymbols();
             } else {
                 System.out.println("Lexical Error: Unable to tokenize the input.");
             }
