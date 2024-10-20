@@ -28,8 +28,12 @@ public class SymbolTable {
         }
         else if(currNode.NodeName.equals("LOCVARS")){
             HashMap<Integer, VariableProps> currTable = stackOfTables.peek();
+            String lastType = "";
             for (Node node : currNode.childNodes) {
-                if (node.NodeName.equals("VNAME")) {
+                if (node.NodeName.equals("VTYP")) {
+                    lastType = node.childNodes.get(0).NodeName;
+                }
+                else if (node.NodeName.equals("VNAME")) {
                     VariableProps newVar = new VariableProps();
                     String varName = node.childNodes.get(0).NodeName;
                     if (checkAlreadyInTable(varName, table)) {
@@ -38,6 +42,7 @@ public class SymbolTable {
                     }
                     newVar.oldName = varName;
                     newVar.translatedName = "v" + node.id;
+                    newVar.varType = lastType;
                     table.put(node.id, newVar);
                     currTable.put(node.id, newVar);
                 }
@@ -61,15 +66,20 @@ public class SymbolTable {
                     }
                     newVar.oldName = varName;
                     newVar.translatedName = "v" + node.id;
+                    newVar.varType = "num";
                     table.put(node.id, newVar);
                     stackOfTables.peek().put(node.id, newVar);
                 }
             }
         }
         else if (currNode.NodeName.equals("GLOBVARS")){
-            var currTable = stackOfTables.peek();    
+            var currTable = stackOfTables.peek();
+            String lastType = "";
             for (Node node : currNode.childNodes) {
-                if (node.NodeName.equals("VNAME")) {
+                if (node.NodeName.equals("VTYP")){
+                    lastType = node.childNodes.get(0).NodeName;
+                }
+                else if (node.NodeName.equals("VNAME")) {
                     VariableProps newVar = new VariableProps();
                     String varName = node.childNodes.get(0).NodeName;
                     if (checkAlreadyInTable(varName, table)) {
@@ -78,14 +88,19 @@ public class SymbolTable {
                     }
                     newVar.oldName = varName;
                     newVar.translatedName = "v" + node.id;
+                    newVar.varType = lastType;
                     table.put(node.id, newVar);
                     currTable.put(node.id, newVar);
                 }
             }
         } else if (currNode.NodeName.equals("ASSIGN")) {
-            var currTable = stackOfTables.peek();    
+            var currTable = stackOfTables.peek();
+            String lastType = "";
             for (Node node : currNode.childNodes) {
-                    if (node.NodeName.equals("VNAME")) {
+                if (node.NodeName.equals("VTYP")) {
+                    lastType = node.childNodes.get(0).NodeName;
+                }    
+                else if (node.NodeName.equals("VNAME")) {
                         VariableProps newVar = new VariableProps();
                         String varName = node.childNodes.get(0).NodeName;
                         if (checkAlreadyInTable(varName, currTable)) {
@@ -94,6 +109,7 @@ public class SymbolTable {
                         }
                         newVar.oldName = varName;
                         newVar.translatedName = "v" + node.id;
+                        newVar.varType = lastType;
                         currTable.put(node.id, newVar);
                         table.put(node.id, newVar);
                     }
@@ -141,7 +157,7 @@ public class SymbolTable {
     public void printTable() {
         for (Integer key : table.keySet()) {
             VariableProps varProps = table.get(key);
-            System.out.println("ID: " + key + ", Old Name: " + varProps.oldName + ", Translated Name: " + varProps.translatedName);
+            System.out.println("ID: " + key + ", Old Name: " + varProps.oldName + ", Translated Name: " + varProps.translatedName + ", Type: " + varProps.varType);
         }
     }
 }
