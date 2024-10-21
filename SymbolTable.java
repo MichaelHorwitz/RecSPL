@@ -26,6 +26,8 @@ public class SymbolTable {
             System.out.println("The following functions were called but not declared");
             System.out.println(funcCalls);
         }
+        System.out.println("-------------------------------------------------------");
+        System.out.println("Finished scope analysis");
         typeCheck(root);
     }
 
@@ -156,8 +158,9 @@ public class SymbolTable {
                 VariableProps newVar = new VariableProps();
                 newVar.oldName = matchedVarProps.oldName;
                 newVar.translatedName = matchedVarProps.translatedName;
-                table.put(currNode.id, newVar);
-                stackOfTables.peek().put(currNode.id, newVar);
+                newVar.varType = matchedVarProps.varType;
+                table.put(currNode.childNodes.getFirst().id, newVar);
+                stackOfTables.peek().put(currNode.childNodes.getFirst().id, newVar);
             } else {
                 System.out.println("Could not find variable " + varName);
             }
@@ -182,6 +185,7 @@ public class SymbolTable {
                 VariableProps newVar = new VariableProps();
                 newVar.oldName = matchedVarProps.oldName;
                 newVar.translatedName = matchedVarProps.translatedName;
+                newVar.varType = matchedVarProps.varType;
                 table.put(currNode.id, newVar);
                 stackOfTables.peek().put(currNode.id, newVar);
             } else {
