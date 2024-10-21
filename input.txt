@@ -11,7 +11,7 @@ begin
     print "Dab";
     V_current =3 ;
     V_bd= "Cjkckc";
-   F_next(V_cu,V_sec,V_c);
+   F_next(V_current, V_secret,V_secret);
     
     
    

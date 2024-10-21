@@ -22,11 +22,11 @@ V_bd
 ;
 F_next
 (
-V_cu
+V_current
 ,
-V_sec
+V_secret
 ,
-V_c
+V_secret
 )
 ;
 end

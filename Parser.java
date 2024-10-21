@@ -842,28 +842,23 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
         pNode.childNodes.add(headerNode);
     
         // Parse FTYP (num or void)
-        FTYP(headerNode);
+        FTYP(headerNode);  // Add return type directly as child of HEADER
     
         // Parse FNAME (function name)
-        // Parse FNAME (function name)
-if (tokenList.size() > 0 && tokenList.get(0).name.matches("F_[a-z]([a-z0-9])*")) {
-    Node fnameNode = new Node("FNAME");
+        if (tokenList.size() > 0 && tokenList.get(0).name.matches("F_[a-z]([a-z0-9])*")) {
+            Node fnameNode = new Node("FNAME");
+            Node functionName = new Node(tokenList.remove(0).name);  // Consume FNAME
+            fnameNode.childNodes.add(functionName);  // Add the function name as a child of FNAME
+            headerNode.childNodes.add(fnameNode);    // Add FNAME as a child of HEADER
+        } else {
+            System.err.println("Syntax Error: Expected function name.");
+            System.exit(1);
+        }
     
-    // Create a child node for the actual function name (token name)
-    Node functionName = new Node(tokenList.remove(0).name);  // Consume FNAME
-    fnameNode.childNodes.add(functionName);  // Add the token name as a child node
-    
-    pNode.childNodes.add(fnameNode);  // Add the FNAME node to the parent node
-} else {
-    System.err.println("Syntax Error: Expected function name.");
-    System.exit(1);
-}
-
-    
-      // Parse parameters (for simplicity, assuming 3 parameters)
+        // Parse parameters (VNAME1, VNAME2, VNAME3)
         if (tokenList.size() > 0 && tokenList.get(0).name.equals("(")) {
             tokenList.remove(0);  // Consume '('
-            
+    
             VNAME(headerNode);  // 1st parameter
             expectComma();
             VNAME(headerNode);  // 2nd parameter
@@ -881,6 +876,7 @@ if (tokenList.size() > 0 && tokenList.get(0).name.matches("F_[a-z]([a-z0-9])*"))
             System.exit(1);
         }
     }
+    
     private boolean isUnNestedAtomic() {
         String token = tokenList.size() > 0 ? tokenList.get(0).name : "";
         // ATOMIC can only be a VNAME (Variable) or a CONST (Constant number or string)
