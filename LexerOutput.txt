@@ -18,7 +18,16 @@ V_current
 ;
 V_bd
 =
-"Cjjjkckc"
+"Cjkckc"
+;
+F_next
+(
+V_cu
+,
+V_sec
+,
+V_c
+)
 ;
 end
 void
@@ -32,7 +41,7 @@ V_c
 )
 {
 text
-V_d
+V_b
 ,
 num
 V_e

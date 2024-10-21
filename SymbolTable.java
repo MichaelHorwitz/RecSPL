@@ -341,7 +341,7 @@ private boolean typeCheckCommand(Node command) {
     }
     
     // Handle "print" command
-    if (commandType.equals("print")) {
+    else if (commandType.equals("print")) {
         // Ensure there are enough child nodes
         if (command.childNodes.size() > 1) {
             Node vnameOrConstNode = command.childNodes.get(1); // Access the VNAME or CONST directly
@@ -357,17 +357,29 @@ private boolean typeCheckCommand(Node command) {
     }
 
     
-    if (commandType.equals("ASSIGN")) {
+    else if (commandType.equals("ASSIGN")) {
         // Implement your logic for assignment commands
         System.out.println("entering command");
          return typeCheckAssign(command.childNodes.get(0));
         
     }
-    if(commandType.equals("BRANCH")){}
-   
-    return true;
-}
+    else if(commandType.equals("BRANCH")){}
+    else if(commandType.equals("return")){
 
+        if (command.childNodes.size() > 1) {
+            Node vnameOrConstNode = command.childNodes.get(1); // Access the VNAME or CONST directly
+            System.out.println("Who I mean: " + vnameOrConstNode.NodeName); // Print the type of the node
+            System.out.println("Who my child is: " + vnameOrConstNode); // Print the entire node for debugging
+            typeCheckAtomic(vnameOrConstNode);
+    }}
+    else if(commandType.equals("CALL")){
+    System.out.println("entering call to call");
+      return typeCheckCall(command.childNodes.get(0));
+   }
+  
+
+return true;
+}
 private boolean typeCheckAssign(Node assignNode) {
     // Ensure the node is indeed an ASSIGN type
     if (!assignNode.NodeName.equals("ASSIGN")) {
@@ -475,10 +487,92 @@ private String typeCheckTerm(Node term) {
                 return varProps.varType;  // Return the type of the variable
             }
         }
+    
+    else if (firstChild.NodeName.equals("CALL")) {
+      //  return typeCheckCall(firstChild);
+    } else if (firstChild.NodeName.equals("OP")) {
+        if (firstChild.childNodes.size() == 2) {
+            //return typeCheckUnaryOp(firstChild); // Handle unary operators
+        } else if (firstChild.childNodes.size() == 3) {
+           // return typeCheckBinaryOp(firstChild); // Handle binary operators
+        }
     }
+}
 
     System.out.println("Error: Invalid term: " + term.NodeName);
     return null;  // Return null for invalid terms
+}
+private boolean typeCheckCall(Node callNode) {
+    System.out.println("inside call function");
+    
+    // Check if the call node has at least 4 children: function name + 3 parameters
+    if (callNode.childNodes.size() < 4) {
+        System.out.println("Error: CALL must have a function name and three parameters.");
+        return false;  // Return false for an invalid call
+    }
+
+    // Get the function name
+    String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName; 
+    System.out.println("function name: " + functionName);
+
+    // Traverse into the ATOMIC nodes
+    String type1 = typeCheckAtomics(callNode.childNodes.get(1).childNodes.get(0)); // First parameter's atomic value
+    String type2 = typeCheckAtomics(callNode.childNodes.get(2).childNodes.get(0)); // Second parameter's atomic value
+    String type3 = typeCheckAtomics(callNode.childNodes.get(3).childNodes.get(0)); // Third parameter's atomic value
+
+    // Check if all three parameters are numeric
+    if ("num".equals(type1) && "num".equals(type2) && "num".equals(type3)) {
+        // Check the symbol table for the function type
+        VariableProps functionProps = getVariableProps(functionName);
+        if (functionProps != null) {
+            return functionProps.varType.equals("num");  // Check if the function's return type is numeric
+        } else {
+            System.out.print("function name"+ functionName);
+            System.out.println("Error: Function not found in symbol table: " + functionName);
+            return false;  // Function not found
+        }
+    } else {
+        System.out.println("Error: Parameters must all be numeric. Received: " + type1 + ", " + type2 + ", " + type3);
+        return false;  // Parameters do not match expected types
+    }
+}
+
+
+
+private String typeCheckAtomics(Node atomic) {
+    System.out.println("atomic node: " + atomic.NodeName);  // Directly log the atomic node name
+
+    if (atomic.NodeName.startsWith("V_")) {  // Assuming variable names start with "V_"
+        // Lookup the variable in the symbol table by its name (which is atomic.NodeName)
+        VariableProps varProps = getVariableProps(atomic.NodeName);  // Use the atomic node name directly
+        
+        if (varProps == null) {
+            System.out.println("Error: Variable not found in symbol table: " + atomic.NodeName);
+            return "u";  // Undefined if variable not found
+        }
+        // Return the type of the variable (e.g., "num", "text")
+        System.out.println("Returning variable type: " + varProps.varType);
+        return varProps.varType;  
+    } else if (atomic.NodeName.equals("CONST")) {
+        // Determine if the constant is a number or text
+        String constValue = atomic.childNodes.get(0).NodeName;  // Assuming the value is stored in the first child node
+        
+        // Check if it's a numeric constant
+        if (constValue.matches("-?[0-9]+(\\.[0-9]+)?")) {
+            return "num";  // Numeric constant
+        }
+        // Check if it's a text constant
+        else if (constValue.matches("\"[A-Z][a-z]{0,7}\"")) {
+            return "text";  // Text constant
+        } else {
+            System.out.println("Error: Invalid constant value: " + constValue);
+            return "u";  // Undefined if constant is neither a valid number nor valid text
+        }
+    }
+    
+    // If it's neither a VNAME nor CONST, it's invalid
+    System.out.println("Error: Invalid atomic value: " + atomic.NodeName);
+    return "u";  // Undefined if the atomic node type is not recognized
 }
 
 
