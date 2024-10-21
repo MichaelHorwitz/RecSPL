@@ -297,31 +297,36 @@ private boolean typeCheckAlgo(Node algo) {
 // Type check instructions
 private boolean typeCheckInstruc1(Node instruc) {
     // Base case: No instructions
-    System.out.println("im inside instruc");
-    System.out.println(instruc.NodeName);
+    System.out.println("I'm inside instruc");
     if (instruc == null) {
-        return true;
+        return true; // No instructions to check
     }
-   
     
-    for(Node child : instruc.childNodes) {
+    // Iterate over child nodes of instruc
+    for (Node child : instruc.childNodes) {
+        // If the child node is a COMMAND, check it
         if (child.NodeName.equals("COMMAND")) {
-            // Type check each GLOBVARS node
             if (!typeCheckCommand(child)) {
-                return false; // Return false if any GLOBVARS fails
+                return false; // Return false if any command check fails
             }
         }
+        // If the child node is another INSTRUC, recursively check it
+        else if (child.NodeName.equals("INSTRUC")) {
+            if (!typeCheckInstruc1(child)) {
+                return false; // Return false if any nested INSTRUC check fails
+            }
+        }
+    }
     
-    
-     
+    return true; // All checks passed
 }
 
-return  typeCheckInstruc1(instruc);
-}
+
 
 private boolean typeCheckCommand(Node command) {
     System.out.println("lets check command");
       
+    // Ensure the command node is valid
     if (command == null || command.childNodes.size() == 0) {
         return false;
     }
@@ -334,24 +339,167 @@ private boolean typeCheckCommand(Node command) {
     if (commandType.equals("skip") || commandType.equals("halt")) {
         return true;  // These commands are always valid
     }
-    if (commandType.equals("print")) {
-        // Ensure there is a VNAME or CONST to print
-        System.out.println("checking print");
-        if (command.childNodes.size() > 1) {
-            Node vnameOrConstNode = command.childNodes.get(1);  // The argument of print (VNAME or CONST)
-            return typeCheckAtomic(vnameOrConstNode);  // Check if the atomic value is valid (VNAME or CONST)
-        }
-        return false;  // Invalid if no argument follows 'print'
-    }
-     
-     
     
-    return false;
+    // Handle "print" command
+    if (commandType.equals("print")) {
+        // Ensure there are enough child nodes
+        if (command.childNodes.size() > 1) {
+            Node vnameOrConstNode = command.childNodes.get(1); // Access the VNAME or CONST directly
+            System.out.println("Who I mean: " + vnameOrConstNode.NodeName); // Print the type of the node
+            System.out.println("Who my child is: " + vnameOrConstNode); // Print the entire node for debugging
+            typeCheckAtomic(vnameOrConstNode);
+            // Check if the node is a VNAME or CONST
+            //return typeCheckAtomic(vnameOrConstNode); // Validate if it's a valid atomic value
+        } else {
+            System.out.println("Error: Print command does not have enough arguments.");
+            return false; // Invalid if no argument follows 'print'
+        }
+    }
 
-
-
-
+    
+    if (commandType.equals("ASSIGN")) {
+        // Implement your logic for assignment commands
+        System.out.println("entering command");
+         return typeCheckAssign(command.childNodes.get(0));
+        
+    }
+    if(commandType.equals("BRANCH")){}
+   
+    return true;
 }
+
+private boolean typeCheckAssign(Node assignNode) {
+    // Ensure the node is indeed an ASSIGN type
+    if (!assignNode.NodeName.equals("ASSIGN")) {
+        System.out.println("Error: Expected ASSIGN node but found: " + assignNode.NodeName);
+        return false;
+    }
+
+    // Ensure the ASSIGN node has the expected structure
+    if (assignNode.childNodes.size() < 3) { // Should have at least [VNAME, '=', TERM]
+        System.out.println("Error: Assign command does not have enough components.");
+        return false;
+    }
+
+    // Create nodes for VNAME and TERM
+    Node vnameNode = assignNode.childNodes.get(0); // First child should be VNAME
+    Node operatorNode = assignNode.childNodes.get(1); // Second child should be '='
+    Node termNode = assignNode.childNodes.get(2); // Third child should be TERM
+
+    // Validate the variable name
+    if (!vnameNode.NodeName.equals("VNAME")) {
+        System.out.println("Error: Expected VNAME in assignment but found: " + vnameNode.NodeName);
+        return false;
+    }
+
+    // Check if the variable exists in the symbol table
+    VariableProps varProps = getVariableProps(vnameNode.childNodes.get(0).NodeName);
+    if (varProps == null) {
+        System.out.println("Error: Variable not found in symbol table: " + vnameNode.childNodes.get(0).NodeName);
+        return false;
+    }
+
+    // Get the variable type from the symbol table
+    String varType = varProps.varType; // This should be 'n' or 'text', for example
+
+    // Type check the TERM and ensure it matches the variable type
+    String termType = typeCheckTerm(termNode); // Implement this function to get the type of the term
+    if (termType == null) {
+        return false; // If term type is not valid
+    }
+
+    System.out.println("Assigning " + varType + " to " + termType);
+
+    // Check if the variable type is numeric and matches the input
+    if (varType.equals("n") && !isNumeric(termNode)) {
+        System.out.println("Error: Cannot assign non-numeric value to numeric variable.");
+        return false; // If VNAME is numeric, TERM must be numeric
+    }
+
+    // Check if the variable type matches the term type
+    if (!varType.equals(termType)) {
+        System.out.println("Error: Type mismatch. Cannot assign " + termType + " to " + varType);
+        return false; // The types must match
+    }
+            System.out.println("assigned properly");
+    return true; // The assignment is valid
+}
+
+// Helper method to check if TERM is numeric
+private boolean isNumeric(Node termNode) {
+    // Assuming TERM is represented as either a constant or a numeric expression
+    if (termNode.NodeName.equals("CONST")) {
+        return true; // Assuming CONST is always numeric
+    }
+    // Add more checks for other types of TERM if needed
+    return false; // By default, assume it's not numeric
+}
+
+// Dummy implementation of typeCheckTerm to return the type of TERM
+
+
+
+
+
+
+private boolean typeCheckAtomic(Node atomic) {
+    if (atomic.NodeName.equals("VNAME")) {
+        VariableProps varProps = getVariableProps(atomic.childNodes.get(0).NodeName);  // Lookup the variable in the symbol table
+        if (varProps == null) {
+            System.out.println("Error: Variable not found in symbol table: " + atomic.childNodes.get(0).NodeName);
+            return false;
+        }
+        // Variable found, so its type is valid
+        return true;
+    } else if (atomic.NodeName.equals("CONST")) {
+        // You can add additional logic to validate the constant type if needed
+        return true;  // Assuming constants are always valid
+    }
+    // If it's neither a VNAME nor CONST, it's invalid
+    System.out.println("Error: Invalid atomic value: " + atomic.NodeName);
+    return false;
+}
+
+private String typeCheckTerm(Node term) {
+    System.out.println("whats entering term: " + term.NodeName);
+    if (term.childNodes.size() > 0) {
+        Node firstChild = term.childNodes.get(0);
+
+        if (firstChild.NodeName.equals("CONST")) {
+            return typeCheckConst(firstChild);  // Check the type of the constant
+        }
+
+        if (firstChild.NodeName.equals("VNAME")) {
+            VariableProps varProps = getVariableProps(firstChild.childNodes.get(0).NodeName);
+            if (varProps != null) {
+                return varProps.varType;  // Return the type of the variable
+            }
+        }
+    }
+
+    System.out.println("Error: Invalid term: " + term.NodeName);
+    return null;  // Return null for invalid terms
+}
+
+
+
+
+
+private String typeCheckConst(Node constNode) {
+    // Assuming constNode has a single child node containing the value
+    String constValue = constNode.childNodes.get(0).NodeName; // Get the value of the constant
+    System.out.println("Checking constant value: " + constValue);
+
+    if (constValue.matches("-?[0-9]+(\\.[0-9]+)?")) {  // Check for numeric constant
+        return "num";  // Return "num" for numeric constants
+    } else if (constValue.matches("\"[A-Z][a-z]{0,7}\"")) {  // Check for text constant
+        return "text";  // Return "text" for string constants
+    }
+
+    System.out.println("Error: Invalid constant value: " + constValue);
+    return null;  // Return null for invalid constants
+}
+
 
 // Type check a command
 

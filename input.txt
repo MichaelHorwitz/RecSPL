@@ -8,8 +8,9 @@ main
     
      
 begin
-    print V_secret;
-    V_secret =3 ;
+    print "Dab";
+    V_current =3 ;
+    V_bd= "Cjjjkckc";
    
     
     

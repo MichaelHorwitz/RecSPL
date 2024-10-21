@@ -10,11 +10,15 @@ V_bd
 ,
 begin
 print
-V_secret
+"Dab"
 ;
-V_secret
+V_current
 =
 3
+;
+V_bd
+=
+"Cjjjkckc"
 ;
 end
 void
