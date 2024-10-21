@@ -28,7 +28,7 @@ public class SymbolTable {
         }
         System.out.println("-------------------------------------------------------");
         System.out.println("Finished scope analysis");
-        typeCheck(root);
+       // typeCheck(root);
     }
 
    // public HashMap<String, VariableProps> getTable() {
@@ -159,8 +159,8 @@ public class SymbolTable {
                 newVar.oldName = matchedVarProps.oldName;
                 newVar.translatedName = matchedVarProps.translatedName;
                 newVar.varType = matchedVarProps.varType;
-                table.put(currNode.childNodes.getFirst().id, newVar);
-                stackOfTables.peek().put(currNode.childNodes.getFirst().id, newVar);
+               // table.put(currNode.childNodes.getFirst().id, newVar);
+                //stackOfTables.peek().put(currNode.childNodes.getFirst().id, newVar);
             } else {
                 System.out.println("Could not find variable " + varName);
             }
@@ -390,7 +390,11 @@ private boolean typeCheckCommand(Node command) {
          return typeCheckAssign(command.childNodes.get(0));
         
     }
-    else if(commandType.equals("BRANCH")){}
+    else if(commandType.equals("BRANCH")){
+        System.out.println("entering the branch");
+      return typeCheckBranch(command.childNodes.get(0));
+
+    }
     else if(commandType.equals("return")){
 
         if (command.childNodes.size() > 1) {
@@ -515,20 +519,31 @@ private String typeCheckTerm(Node term) {
             }
         }
     
-    else if (firstChild.NodeName.equals("CALL")) {
-      //  return typeCheckCall(firstChild);
-    } else if (firstChild.NodeName.equals("OP")) {
+       else if (firstChild.NodeName.equals("CALL")) {
+        System.out.println("starting here");
+       return typecheckCallTerm(firstChild);
+       }
+    
+      else if (firstChild.NodeName.equals("UNOP")) {
         if (firstChild.childNodes.size() == 2) {
-            //return typeCheckUnaryOp(firstChild); // Handle unary operators
-        } else if (firstChild.childNodes.size() == 3) {
-           // return typeCheckBinaryOp(firstChild); // Handle binary operators
+            return typeCheckOp(firstChild); // Handle unary operators
+        } }
+     else if(firstChild.NodeName.equals("BINOP")){
+         if (firstChild.childNodes.size() == 3) {
+           return  typeCheckBinop(firstChild); // Handle binary operators
         }
-    }
-}
+    
 
+}
+    }
     System.out.println("Error: Invalid term: " + term.NodeName);
     return null;  // Return null for invalid terms
 }
+ 
+
+
+
+
 private boolean typeCheckCall(Node callNode) {
     System.out.println("inside call function");
     
@@ -549,20 +564,148 @@ private boolean typeCheckCall(Node callNode) {
 
     // Check if all three parameters are numeric
     if ("num".equals(type1) && "num".equals(type2) && "num".equals(type3)) {
-        // Check the symbol table for the function type
+         
         VariableProps functionProps = getVariableProps(functionName);
-        if (functionProps != null) {
-            return functionProps.varType.equals("num");  // Check if the function's return type is numeric
-        } else {
-            System.out.print("function name"+ functionName);
-            System.out.println("Error: Function not found in symbol table: " + functionName);
-            return false;  // Function not found
-        }
-    } else {
+        System.out.println("need to get this functions return type"+ functionName);
+
+        return true;
+    }
+        // Check the symbol table for the function type
+       // VariableProps functionProps = getVariableProps(functionName);
+        //if (functionProps != null) {
+           // return true;
+           // return functionProps.varType.equals("num");  // Check if the function's return type is numeric
+        //} 
+        
+        //else  {
+           // System.out.print("function name"+ functionName);
+           // System.out.println("Error: Function not found in symbol table: " + functionName);
+           // return false;  // Function not found
+        //}
+      
+    else {
         System.out.println("Error: Parameters must all be numeric. Received: " + type1 + ", " + type2 + ", " + type3);
         return false;  // Parameters do not match expected types
     }
+   
+} private String typecheckCallTerm(Node callNode){
+
+
+    String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName; 
+    System.out.println("function name: " + functionName);
+    VariableProps functionProps = getVariableProps(functionName);
+    if (functionProps != null) {
+      
+       return functionProps.varType ; // Check if the function's return type is numeric
+    } 
+   return "unknown type";
+
+
 }
+
+private String typeCheckOp(Node opNode) {
+    // Ensure the node has enough children (UNOP and ARG)
+    if (opNode.childNodes.size() < 2) {
+        System.out.println("Error: OP must have an UNOP and an ARG.");
+        return "u";  // Undefined
+    }
+
+    // Get the UNOP (first child) and ARG (second child)
+    String unopType = typeCheckUnop(opNode.childNodes.get(0));
+    String argType = typeCheckArg(opNode.childNodes.get(1));
+
+    // Check if the UNOP and ARG are both boolean or both numeric
+    if (unopType.equals("bool") && argType.equals("bool")) {
+        return "bool";  // Bool type
+    } else if (unopType.equals("num") && argType.equals("num")) {
+        return "num";  // Numeric type
+    } else {
+        System.out.println("Error: Mismatched types for UNOP and ARG. UNOP: " + unopType + ", ARG: " + argType);
+        return "u";  // Undefined if types don't match
+    }
+}
+
+// Type checking for UNOP (e.g., "not", "sqrt")
+private String typeCheckUnop(Node unopNode) {
+    String unopName = unopNode.NodeName;
+    
+    // Check if the UNOP is boolean or numeric
+    if (unopName.equals("not")) {
+        return "bool";  // Boolean type
+    } else if (unopName.equals("sqrt")) {
+        return "num";  // Numeric type
+    } else {
+        System.out.println("Error: Invalid UNOP: " + unopName);
+        return "u";  // Undefined if unrecognized UNOP
+    }
+}
+
+// Type checking for ARG (which can be either an ATOMIC or another OP)
+private String typeCheckArg(Node argNode) {
+    if (argNode.NodeName.equals("ATOMIC")||argNode.NodeName.equals("CONST")) {
+        return typeCheckAtomics(argNode);  // Check type of atomic values
+    } else if (argNode.NodeName.equals("OP")) {
+        return typeCheckOp(argNode);  // Recursively check the type of nested operations
+    } else {
+        System.out.println("Error: Invalid ARG: " + argNode.NodeName);
+        return "u";  // Undefined if not recognized
+    }
+}
+
+private String typeCheckBinop(Node binopNode) {
+    System.out.println("i enter binop");
+    // Ensure the node has enough children: BINOP, ARG1, and ARG2
+    if (binopNode.childNodes.size() < 3) {
+        System.out.println("Error: BINOP must have two arguments.");
+        return "u";  // Undefined
+    }
+
+    // Get the BINOP (first child), ARG1 (second child), and ARG2 (third child)
+    String binopType = typeCheckBinopType(binopNode.childNodes.get(0));
+    String arg1Type = typeCheckArg(binopNode.childNodes.get(1));
+    String arg2Type = typeCheckArg(binopNode.childNodes.get(2));
+
+    // Check if both arguments are boolean and BINOP is a boolean operation
+    if (binopType.equals("bool") && arg1Type.equals("bool") && arg2Type.equals("bool")) {
+        return "bool";  // Bool type
+    } 
+    // Check if both arguments are numeric and BINOP is a numeric operation
+    else if (binopType.equals("num") && arg1Type.equals("num") && arg2Type.equals("num")) {
+        return "num";  // Numeric type
+    }
+    // Check if BINOP is a comparison operation and both arguments are numeric
+    else if (binopType.equals("c") && arg1Type.equals("num") && arg2Type.equals("num")) {
+        return "bool";  // Comparison results in a boolean type
+    } 
+    else {
+        System.out.println("Error: Mismatched types for BINOP and arguments. BINOP: " + binopType + ", ARG1: " + arg1Type + ", ARG2: " + arg2Type);
+        return "u";  // Undefined if types don't match
+    }
+}
+
+// Type checking for BINOP (e.g., "or", "and", "eq", "grt", "add", "sub", "mul", "div")
+private String typeCheckBinopType(Node binopNode) {
+    String binopName = binopNode.NodeName;
+
+    // Check if BINOP is boolean
+    if (binopName.equals("or") || binopName.equals("and")) {
+        return "bool";  // Boolean type
+    } 
+    // Check if BINOP is a comparison operator
+    else if (binopName.equals("eq") || binopName.equals("grt")) {
+        return "c";  // Comparison type
+    } 
+    // Check if BINOP is a numeric operator
+    else if (binopName.equals("add") || binopName.equals("sub") || binopName.equals("mul") || binopName.equals("div")) {
+        return "num";  // Numeric type
+    } 
+    else {
+        System.out.println("Error: Invalid BINOP: " + binopName);
+        return "u";  // Undefined if unrecognized BINOP
+    }
+}
+
+// Reuse the typeCheckArg method for both ARG1 and ARG2 (same as defined earlier)
 
 
 
@@ -586,6 +729,7 @@ private String typeCheckAtomics(Node atomic) {
         
         // Check if it's a numeric constant
         if (constValue.matches("-?[0-9]+(\\.[0-9]+)?")) {
+            System.out.print( "const value ha this "+constValue);
             return "num";  // Numeric constant
         }
         // Check if it's a text constant
@@ -623,6 +767,388 @@ private String typeCheckConst(Node constNode) {
 
 
 // Type check a command
+private boolean typeCheckBranch(Node branchNode) {
+    // Ensure the node has children for COND, ALGO1, and ALGO2
+    if (branchNode.childNodes.size() < 3) {
+        System.out.println("Error: Invalid BRANCH structure, expected COND, ALGO1, and ALGO2.");
+        return false;  // Invalid BRANCH structure
+    }
+
+    Node condNode = branchNode.childNodes.get(0);  // COND
+    Node algo1Node = branchNode.childNodes.get(1);  // ALGO1
+    Node algo2Node = branchNode.childNodes.get(2);  // ALGO2
+
+    // Type-check the condition (COND)
+    String condType = typeCheckCond(condNode);
+    
+    // If the condition is a boolean ('b'), type-check both branches
+    if (condType.equals("bool")) {
+        return typeCheckAlgo(algo1Node) && typeCheckAlgo(algo2Node);
+    } else {
+        System.out.println("Error: COND in BRANCH must evaluate to boolean. Received: " + condType);
+        return false;  // Invalid COND type
+    }
+}
+private String typeCheckCond(Node condNode) {
+    // Cond can be SIMPLE or COMPOSIT
+    if (condNode.NodeName.equals("SIMPLE")) {
+        return typeCheckSimple(condNode);
+    } else if (condNode.NodeName.equals("COMPOSIT")) {
+        return typeCheckComposit(condNode);
+    } else {
+        System.out.println("Error: Invalid COND type: " + condNode.NodeName);
+        return "u";  // Undefined type
+    }
+}
+private String typeCheckSimple(Node simpleNode) {
+    // SIMPLE is of the form BINOP( ATOMIC1, ATOMIC2 )
+    if (simpleNode.childNodes.size() < 3) {
+        System.out.println("Error: SIMPLE must have a BINOP and two ATOMICs.");
+        return "u";  // Undefined
+    }
+
+    String binopType = typeCheckBinopType(simpleNode.childNodes.get(0));  // BINOP
+    String atomic1Type = typeCheckAtomics(simpleNode.childNodes.get(1));  // ATOMIC1
+    String atomic2Type = typeCheckAtomics(simpleNode.childNodes.get(2));  // ATOMIC2
+
+    // Handle boolean BINOP (e.g., and, or) with boolean ATOMICs
+    if (binopType.equals("bool") && atomic1Type.equals("bool") && atomic2Type.equals("bool")) {
+        return "bool";  // Boolean result
+    }
+    // Handle comparison BINOP (e.g., eq, grt) with numeric ATOMICs
+    else if (binopType.equals("c") && atomic1Type.equals("num") && atomic2Type.equals("num")) {
+        return "bool";  // Comparison results in a boolean
+    } else {
+        System.out.println("Error: Invalid types in SIMPLE. BINOP: " + binopType + ", ATOMIC1: " + atomic1Type + ", ATOMIC2: " + atomic2Type);
+        return "u";  // Undefined
+    }
+}
+private String typeCheckComposit(Node compositNode) {
+    // COMPOSIT ::= BINOP( SIMPLE1, SIMPLE2 ) or UNOP( SIMPLE )
+    if (compositNode.NodeName.equals("BINOP")) {
+        // COMPOSIT is of the form BINOP(SIMPLE1, SIMPLE2)
+        if (compositNode.childNodes.size() < 3) {
+            System.out.println("Error: COMPOSIT BINOP must have two SIMPLEs.");
+            return "u";  // Undefined
+        }
+
+        String binopType = typeCheckBinopType(compositNode.childNodes.get(0));  // BINOP
+        String simple1Type = typeCheckSimple(compositNode.childNodes.get(1));  // SIMPLE1
+        String simple2Type = typeCheckSimple(compositNode.childNodes.get(2));  // SIMPLE2
+
+        // Boolean BINOP with boolean SIMPLEs
+        if (binopType.equals("b") && simple1Type.equals("b") && simple2Type.equals("b")) {
+            return "b";  // Boolean result
+        } else {
+            System.out.println("Error: Invalid types in COMPOSIT. BINOP: " + binopType + ", SIMPLE1: " + simple1Type + ", SIMPLE2: " + simple2Type);
+            return "u";  // Undefined
+        }
+    } else if (compositNode.NodeName.equals("UNOP")) {
+        // COMPOSIT is of the form UNOP(SIMPLE)
+        if (compositNode.childNodes.size() < 2) {
+            System.out.println("Error: COMPOSIT UNOP must have a SIMPLE.");
+            return "u";  // Undefined
+        }
+
+        String unopType = typeCheckUnopType(compositNode.childNodes.get(0));  // UNOP
+        String simpleType = typeCheckSimple(compositNode.childNodes.get(1));  // SIMPLE
+
+        // Boolean UNOP with boolean SIMPLE
+        if (unopType.equals("b") && simpleType.equals("b")) {
+            return "b";  // Boolean result
+        } else {
+            System.out.println("Error: Invalid types in COMPOSIT UNOP. UNOP: " + unopType + ", SIMPLE: " + simpleType);
+            return "u";  // Undefined
+        }
+    } else {
+        System.out.println("Error: Invalid COMPOSIT type: " + compositNode.NodeName);
+        return "u";  // Undefined
+    }
+}
+private String typeCheckUnopType(Node unopNode) {
+    String unopName = unopNode.NodeName;
+
+    // Check if UNOP is "not"
+    if (unopName.equals("not")) {
+        return "bool";  // Boolean type
+    }
+    // Check if UNOP is "sqrt"
+    else if (unopName.equals("sqrt")) {
+        return "num";  // Numeric type
+    } else {
+        System.out.println("Error: Invalid UNOP: " + unopName);
+        return "u";  // Undefined
+    }
+}
+
+//*************************************************************************************************
+
+
+
+
+
+
+
+
+
+
+
+public boolean typeCheckFunctions(Node root) {
+    // Base case: no functions to check.
+    if (root==null) {
+        return true;
+    }
+
+   
+
+    return true;
+}
+
+// This method checks a single function declaration.
+private boolean typeCheckDeclaration(Node decl) {
+    return typeCheckHeader(decl) && typeCheckBody(decl);
+}
+
+// This method checks the function header.
+private boolean typeCheckHeader(Node header) {
+  //  String returnType = typeof(header.getReturnType());
+   // String functionName = header.getFunctionName();
+
+    // Link return type to function name in the symbol table.
+    //symbolTable.link(functionName, returnType);
+
+    // Check argument types.
+   /*  for (String argType : header.getArgumentTypes()) {
+        if (!argType.equals("n")) { // Only allow numeric arguments.
+            return false;
+        }
+    }/* */
+
+    return true;
+}
+
+// This method checks the function body.
+private boolean typeCheckBody(Node body) {
+    return typeCheckProlog(body)
+        && typeCheckLocVars(body)
+        && typeCheckAlgo(body)
+        && typeCheckEpilog(body)
+        && typeCheckSubFunctions(body);
+}
+
+// Check prolog, always returns true as per base case.
+private boolean typeCheckProlog(Node prolog) {
+    return true; // Base case
+}
+
+// Check the local variables.
+private boolean typeCheckLocVars(Node localVars) {
+    /* *for (LocalVar var : localVars.getVariables()) {
+        String type = typeof(var.getType());
+        String name = var.getName();
+
+        // Link variable type to its name in the symbol table.
+        symbolTable.link(name, type);
+
+        // Ensure the variable type matches.
+        if (!var.getType().equals(type)) {
+            return false;
+        }
+    }/* */
+
+    return true;
+}
+
+// Check the main algorithm.
+
+
+// Check the epilog, always returns true as per base case.
+private boolean typeCheckEpilog(Node epilog) {
+    return true; // Base case
+}
+
+// Check sub-functions.
+private boolean typeCheckSubFunctions(Node subFunctions) {
+    
+    return true;
+}
+
+// Simulated method to get type of a given variable/type.
+private String typeof(String type) {
+    switch (type) {
+        case "num":
+            return "n"; // Numeric return type
+        case "void":
+            return "v"; // Void return type
+        default:
+            return "unknown"; // Unknown type
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
