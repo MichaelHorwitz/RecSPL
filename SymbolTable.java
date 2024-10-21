@@ -38,7 +38,10 @@ public class SymbolTable {
             return;
         }
         else if (currNode.NodeName.equals("CALL")){
-            funcCalls.add(currNode.childNodes.getFirst().childNodes.getFirst().NodeName);
+            var fName = currNode.childNodes.getFirst().childNodes.getFirst().NodeName;
+            if (!checkAlreadyInTable(fName, table)){
+                funcCalls.add(fName);
+            }
         }
         else if(currNode.NodeName.equals("LOCVARS")){
             HashMap<Integer, VariableProps> currTable = stackOfTables.peek();
