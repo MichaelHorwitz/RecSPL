@@ -10,6 +10,7 @@ public class SymbolTable {
     HashMap<Integer, VariableProps> table;
     ArrayList<HashMap<Integer, VariableProps>> listOfTables;
     Stack<HashMap<Integer, VariableProps>> stackOfTables;
+    ArrayList<String> funcCalls;
     public SymbolTable(){
         table = new HashMap<>();
         stackOfTables = new Stack<>();
@@ -19,7 +20,12 @@ public class SymbolTable {
             System.out.println("Invalid root");
             return;
         }
+        funcCalls = new ArrayList<>();
         recGen(root);
+        if (!funcCalls.isEmpty()) {
+            System.out.println("The following functions were called but not declared");
+            System.out.println(funcCalls);
+        }
         typeCheck(root);
     }
 
@@ -30,6 +36,9 @@ public class SymbolTable {
     public void recGen(Node currNode){
         if (currNode == null) {
             return;
+        }
+        else if (currNode.NodeName.equals("CALL")){
+            funcCalls.add(currNode.childNodes.getFirst().childNodes.getFirst().NodeName);
         }
         else if(currNode.NodeName.equals("LOCVARS")){
             HashMap<Integer, VariableProps> currTable = stackOfTables.peek();
@@ -78,6 +87,12 @@ public class SymbolTable {
                     fVar.varType = lastFType;
                     table.put(node.id, fVar);
                     stackOfTables.peek().put(node.id, fVar);
+                    for (int i = 0; i < funcCalls.size(); i++) {
+                        if (fName.equals(funcCalls.get(i))) {
+                            funcCalls.remove(i);
+                            i--;
+                        }
+                    }
                 }
                 if (node.NodeName.equals("VNAME")) {
                     VariableProps newVar = new VariableProps();
