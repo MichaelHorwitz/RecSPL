@@ -119,26 +119,31 @@ public class SymbolTable {
                 }
             }
         } else if (currNode.NodeName.equals("ASSIGN")) {
-            var currTable = stackOfTables.peek();
-            String lastType = "";
-            for (Node node : currNode.childNodes) {
-                if (node.NodeName.equals("VTYP")) {
-                    lastType = node.childNodes.get(0).NodeName;
-                }    
-                else if (node.NodeName.equals("VNAME")) {
-                        VariableProps newVar = new VariableProps();
-                        String varName = node.childNodes.get(0).NodeName;
-                        if (checkAlreadyInTable(varName, currTable)) {
-                            System.out.println("Variable already declared: " + varName);
-                            return;
-                        }
-                        newVar.oldName = varName;
-                        newVar.translatedName = "v" + node.id;
-                        newVar.varType = lastType;
-                        currTable.put(node.id, newVar);
-                        table.put(node.id, newVar);
+            String varName = currNode.childNodes.get(0).childNodes.get(0).NodeName;
+            VariableProps matchedVarProps = null;
+
+            for (HashMap<Integer, VariableProps> map : stackOfTables) {
+                for (VariableProps varProps : map.values()) {
+                    if (varProps.oldName.equals(varName)) {
+                        matchedVarProps = varProps;
+                        break;
                     }
                 }
+                if (matchedVarProps != null) {
+                    break;
+                }
+            }
+
+            if (matchedVarProps != null) {
+                VariableProps newVar = new VariableProps();
+                newVar.oldName = matchedVarProps.oldName;
+                newVar.translatedName = matchedVarProps.translatedName;
+                table.put(currNode.id, newVar);
+                stackOfTables.peek().put(currNode.id, newVar);
+            } else {
+                System.out.println("Could not find variable " + varName);
+            }
+
         } else if (currNode.NodeName.equals("VNAME")){
             String varName = currNode.childNodes.get(0).NodeName;
             VariableProps matchedVarProps = null;
