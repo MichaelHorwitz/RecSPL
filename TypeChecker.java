@@ -62,27 +62,27 @@ class TypeChecker {
                 }
                 System.out.println("Variable NAME: " + varName);
                 
-                // Check the type in the symbol table for this specific variable
-                //VariableProps varProps = table.get(0);
-                  
-                   
-                // Ensure varProps is not null and check for type match
-               // if (varProps == null || !varProps.varType.equals(varType)) {
-                  //  System.out.println("table has this" varProps.getType()+ "expecting this"+varType);
-                   // System.out.println("Type mismatch for variable: " + varName);
-                   // return false; // Type mismatch
-              //  }
-           // }
-        //}
-    
-       // All variables passed the type check
-    }
-    
+                // Retrieve the variable properties from the symbol table
+                VariableProps varProps = getVariableProps(varName);
+                
+                // Check if varProps is not null and compare types
+                if (varProps != null) {
+                    System.out.println("Found Variable: " + varProps.oldName + " with Type: " + varProps.varType);
+                    if (!varProps.varType.equals(varType)) {
+                        System.out.println("Type mismatch for variable: " + varName + ". Found: " + varProps.varType + ", Expected: " + varType);
+                        return false; // Type mismatch
+                    }
+                } else {
+                    System.out.println("Variable " + varName + " not found in symbol table.");
+                    return false; // Variable not found
+                }
+            }
         }
     
+        // All variables passed the type check
         return true; 
-    
     }
+    
     
 
     // Type check algorithm
@@ -101,46 +101,103 @@ class TypeChecker {
 
     // Type check a command
     private boolean typeCheckCommand(Node command) {
-        /*  if (command.isSkip()) {
-            return true; // Base case
-
-        } else if (command.isHalt()) {
-            return true; // Base case
-
-        } else if (command.isPrint()) {
-            String atomicType = typeCheckAtomic(command.getAtomic());
-            return atomicType.equals("n") || atomicType.equals("t");
-
-        } else if (command.isReturn()) {
-            String atomicType = typeCheckAtomic(command);
-           // String functionType = symbolTable.getFunctionType(); // Find the function type in scope
-            return atomicType.equals(functionType);
-
-        } else if (command.isAssign()) {
-            return typeCheckAssign(command.getAssign());
-
-        } else if (command.isCall()) {
-            String callType = typeCheckCall(command.getCall());
-            return callType.equals("v"); // Check for void-type
-
-        } else if (command.isBranch()) {
-            return typeCheckBranch(command);
-        }/* */
-
-        return false;
+        // Check if the command is of type "COMMAND"
+        if (!command.NodeName.equals("COMMAND")) {
+            return false; // Not a valid command node
+        }
+    
+        // Check if it's a skip or halt command
+        if (command.childNodes.size() == 1) {
+            String token = command.childNodes.get(0).NodeName;
+            return token.equals("skip") || token.equals("halt"); // These commands are always valid
+        }
+    
+        // Handle print command
+        if (command.childNodes.size() > 1 && command.childNodes.get(0).NodeName.equals("print")) {
+            String atomicType = typeCheckAtomic(command.childNodes.get(1)); // Check the atomic value after 'print'
+            return atomicType.equals("n") || atomicType.equals("t"); // Valid types for print
+        }
+    
+        // Handle return command
+        if (command.childNodes.size() > 1 && command.childNodes.get(0).NodeName.equals("return")) {
+            String atomicType = typeCheckAtomic(command.childNodes.get(1)); // Check the atomic value after 'return'
+          //  String functionType = symbolTable.getFunctionType(); // Retrieve the expected function return type
+           return true;
+         // return atomicType.equals(functionType); // Validate the atomic type against function return type
+        }
+    
+        // Handle assignment command
+        if (command.childNodes.size() > 1 && command.childNodes.get(0).NodeName.equals("ASSIGN")) {
+            return typeCheckAssign(command.childNodes.get(0)); // Validate assignment
+        }
+    
+        // Handle function call command
+        if (command.childNodes.size() > 0 && command.childNodes.get(0).NodeName.matches("F_[a-z]([a-z0-9])*")) {
+            String callType = typeCheckCall(command.childNodes.get(0)); // Check the function call type
+            return callType.equals("v"); // Ensure the function returns void
+        }
+    
+        // Handle if command
+        if (command.childNodes.size() > 1 && command.childNodes.get(0).NodeName.equals("if")) {
+            return typeCheckBranch(command); // Validate the if structure
+        }
+    
+        return false; // Default case if nothing matches
     }
+    
 
     // Type check atomic values
-    private String typeCheckAtomic(Node atomic) {
-       /*  if (atomic.isVarName()) {
-            return symbolTable.getType(atomic.getVarName());
-
-        } else if (atomic.isConst()) {
-            return atomic.getConstType(); // Return type of constant
-        }
-        /* */ 
-         return "u"; // Undefined
+    private String typeCheckAtomic(Node atomicNode) {
+       // String token = tokenList.get(0).name;
+    
+        // Define regex patterns
+       /*  String variablePattern = "V_[a-z]([a-z0-9]*)"; // Matches variable names
+        String numberPattern = "-?[0-9]+(\\.[0-9]+)?"; // Matches integers and decimals
+        String stringPattern = "\"[A-Z][a-z]{0,7}\""; // Matches strings enclosed in double quotes
+    
+        // Check if the token matches variable name
+        if (token.matches(variablePattern)) {
+            // Retrieve the variable's type from the symbol table
+            VariableProps variableProps = getVariableProps(token); // Implement this method to fetch from symbol table
+            if (variableProps != null) {
+                return variableProps.varType; // Return the variable's type
+            } else {
+                System.out.println("Error: Variable " + token + " is not defined.");
+                return "undefined"; // Variable is not defined
+            }
+        } 
+        // Check if the token matches a constant (number)
+        else if (token.matches(numberPattern)) {
+            // Determine if it's an integer or a float
+            if (token.contains(".")) {
+                return "float"; // It's a float
+            } else {
+                return "int"; // It's an integer
+            }
+        } 
+        // Check if the token matches a string constant
+        else if (token.matches(stringPattern)) {
+            return "string"; // It's a string
+        } 
+    
+        System.out.println("Error: Invalid atomic value " + token);
+        return "invalid"; // Invalid atomic value
+        /* */
+        return "int";
     }
+    
+    // Placeholder for method to get variable properties from the symbol table
+    private VariableProps getVariableProps(String varName) {
+        // Implement logic to retrieve VariableProps from the symbol table
+        // Example:
+       /*  for (VariableProps vp : table) {
+            if (vp.oldName.equals(varName)) {
+                return vp; // Return the variable properties if found
+            }
+        }/* */
+        return null; // Not found
+    }
+    
 
     // Type check assignment
     private boolean typeCheckAssign(Node assign) {

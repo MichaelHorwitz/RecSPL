@@ -1,5 +1,9 @@
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
+
+
+
 import java.util.ArrayList;
 
 public class SymbolTable {
@@ -194,9 +198,23 @@ public boolean typeCheck(Node root) {
 
         // Loop through the children of PROG
         for (Node child : root.childNodes) {
-            if (child.NodeName.equals("GLOBVARS")) {
+            if (child.NodeName.equals("ALGO")) {
+                System.out.println("sending algo to command");
                 // Type check each GLOBVARS node
-                if (!typeCheckGLOVARS1(child)) {
+                if (!typeCheckAlgo(child)) {
+                    return false; // Return false if any GLOBVARS fails
+                }
+            }
+        }
+        return true; // All GLOBVARS passed type checking
+    } else if (root.NodeName.equals("PROG")) {
+        System.out.println("Type checking ALgo");
+
+        // Loop through the children of PROG
+        for (Node child : root.childNodes) {
+            if (child.NodeName.equals("ALGO")) {
+                // Type check each GLOBVARS node
+                if (!typeCheckAlgo(child)) {
                     return false; // Return false if any GLOBVARS fails
                 }
             }
@@ -211,7 +229,7 @@ public boolean typeCheck(Node root) {
 private boolean typeCheckGLOVARS1(Node globVarsNode) {
     String varName = null;
     String varType = null;
-
+    boolean status=false;
     // Ensure we are processing only a GLOBVARS node
     if (!globVarsNode.NodeName.equals("GLOBVARS")) {
         System.out.println("Error: Expected GLOBVARS node, found: " + globVarsNode.NodeName);
@@ -234,30 +252,124 @@ private boolean typeCheckGLOVARS1(Node globVarsNode) {
             }
             System.out.println("Variable NAME: " + varName);
             
-            // Check the type in the symbol table for this specific variable
-            //VariableProps varProps = table.get(0);
-              
-               
-            // Ensure varProps is not null and check for type match
-           // if (varProps == null || !varProps.varType.equals(varType)) {
-              //  System.out.println("table has this" varProps.getType()+ "expecting this"+varType);
-               // System.out.println("Type mismatch for variable: " + varName);
-               // return false; // Type mismatch
-          //  }
-       // }
-    //}
-
-   // All variables passed the type check
-}
-
+            // Retrieve the variable properties from the symbol table
+            VariableProps varProps = getVariableProps(varName);
+            
+            // Check if varProps is not null and compare types
+            if (varProps != null) {
+                System.out.println("Found Variable: " + varProps.oldName + " with Type: " + varProps.varType);
+                if (!varProps.varType.equals(varType)) {
+                    System.out.println("Type mismatch for variable: " + varName + ". Found: " + varProps.varType + ", Expected: " + varType);
+                    return false; // Type mismatch
+                }
+                status=true;
+                System.out.println("wha i found at end"+ status);
+          
+            } else {
+                System.out.println("Variable " + varName + " not found in symbol table.");
+                return false; // Variable not found
+            }
+        }
     }
 
+    // All variables passed the type check
     return true; 
-
 }
 
 
+private boolean typeCheckAlgo(Node algo) {
 
+      // Loop through the children of PROG
+      for (Node child : algo.childNodes) {
+        if (child.NodeName.equals("INSTRUC")) {
+            // Type check each GLOBVARS node
+            if (!typeCheckInstruc1(child)) {
+                return false; // Return false if any GLOBVARS fails
+            }
+        }
+    }
+       
+    return true;
+   
+    // return typeCheckInstruc1(algo);
+}
+
+// Type check instructions
+private boolean typeCheckInstruc1(Node instruc) {
+    // Base case: No instructions
+    System.out.println("im inside instruc");
+    System.out.println(instruc.NodeName);
+    if (instruc == null) {
+        return true;
+    }
+   
+    
+    for(Node child : instruc.childNodes) {
+        if (child.NodeName.equals("COMMAND")) {
+            // Type check each GLOBVARS node
+            if (!typeCheckCommand(child)) {
+                return false; // Return false if any GLOBVARS fails
+            }
+        }
+    
+    
+     
+}
+
+return  typeCheckInstruc1(instruc);
+}
+
+private boolean typeCheckCommand(Node command) {
+    System.out.println("lets check command");
+      
+    if (command == null || command.childNodes.size() == 0) {
+        return false;
+    }
+
+    // Get the first child node to determine the type of command
+    String commandType = command.childNodes.get(0).NodeName;
+    System.out.println("Processing command type: " + commandType);
+
+    // Handle "skip" and "halt" commands (base cases)
+    if (commandType.equals("skip") || commandType.equals("halt")) {
+        return true;  // These commands are always valid
+    }
+    if (commandType.equals("print")) {
+        // Ensure there is a VNAME or CONST to print
+        System.out.println("checking print");
+        if (command.childNodes.size() > 1) {
+            Node vnameOrConstNode = command.childNodes.get(1);  // The argument of print (VNAME or CONST)
+            return typeCheckAtomic(vnameOrConstNode);  // Check if the atomic value is valid (VNAME or CONST)
+        }
+        return false;  // Invalid if no argument follows 'print'
+    }
+     
+     
+    
+    return false;
+
+
+
+
+}
+
+// Type check a command
+
+
+
+
+
+
+private VariableProps getVariableProps(String varName) {
+    // Iterate through the entries of the table map
+    for (Map.Entry<Integer, VariableProps> entry : table.entrySet()) {
+        VariableProps vp = entry.getValue(); // Get the VariableProps from the entry
+        if (vp.oldName.equals(varName)) {
+            return vp; // Return the variable properties if found
+        }
+    }
+    return null; // Not found
+}
 
 
 
