@@ -1,12 +1,14 @@
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
-
-
-
 import java.util.ArrayList;
 
+
 public class SymbolTable {
+
+public static final String RED = "\033[0;31m";
+public static final String YELLOW = "\033[0;33m";
+
     HashMap<Integer, VariableProps> table;
     ArrayList<HashMap<Integer, VariableProps>> listOfTables;
     Stack<HashMap<Integer, VariableProps>> stackOfTables;
@@ -27,8 +29,15 @@ public class SymbolTable {
             System.out.println(funcCalls);
         }
         System.out.println("-------------------------------------------------------");
-        System.out.println("Finished scope analysis");
+        System.out.println( RED+"Finished scope analysis");
+        System.out.println("-------------------------------------------------------");
+      
        typeCheck(root);
+       System.out.println(YELLOW +"Finished type checking");
+
+       System.out.println("-------------------------------------------------------");
+       System.out.println();
+       System.out.println();
     }
 
    // public HashMap<String, VariableProps> getTable() {
@@ -225,7 +234,7 @@ public boolean typeCheck(Node root) {
         return false;
     }
 
-    System.out.println("Type checking PROG");
+   // System.out.println("Type checking PROG");
 
     boolean globVarsPassed = false;
     boolean algoPassed = false;
@@ -234,19 +243,19 @@ public boolean typeCheck(Node root) {
     // Loop through the children of PROG
     for (Node child : root.childNodes) {
         if (child.NodeName.equals("GLOBVARS")) {
-            System.out.println("Type checking GLOBVARS");
+          //  System.out.println("Type checking GLOBVARS");
             if (!typeCheckGLOVARS1(child)) {
                 return false; // Return false if GLOBVARS fails
             }
             globVarsPassed = true;
         } else if (child.NodeName.equals("ALGO")) {
-            System.out.println("Type checking ALGO");
+           // System.out.println("Type checking ALGO");
             if (!typeCheckAlgo(child)) {
                 return false; // Return false if ALGO fails
             }
             algoPassed = true;
         } else if (child.NodeName.equals("FUNCTIONS")) {
-            System.out.println("Type checking FUNCTIONS");
+           // System.out.println("Type checking FUNCTIONS");
             if (!typeCheckFunctions(child)) {
                 return false; // Return false if FUNCTIONS fails
             }
@@ -281,27 +290,27 @@ private boolean typeCheckGLOVARS1(Node globVarsNode) {
             while (varType.endsWith(":")) {
                 varType = varType.substring(0, varType.length() - 1);
             }
-            System.out.println("Variable TYPE: " + varType);
+          //  System.out.println("Variable TYPE: " + varType);
         } 
         else if (child.NodeName.equals("VNAME")) {
             varName = getChildValue(child).trim();
             while (varName.endsWith(":")) {
                 varName = varName.substring(0, varName.length() - 1);
             }
-            System.out.println("Variable NAME: " + varName);
+           // System.out.println("Variable NAME: " + varName);
             
             // Retrieve the variable properties from the symbol table
             VariableProps varProps = getVariableProps(varName);
             
             // Check if varProps is not null and compare types
             if (varProps != null) {
-                System.out.println("Found Variable: " + varProps.oldName + " with Type: " + varProps.varType);
+              //  System.out.println("Found Variable: " + varProps.oldName + " with Type: " + varProps.varType);
                 if (!varProps.varType.equals(varType)) {
                     System.out.println("Type mismatch for variable: " + varName + ". Found: " + varProps.varType + ", Expected: " + varType);
                     return false; // Type mismatch
                 }
                 status=true;
-                System.out.println("wha i found at end"+ status);
+              //  System.out.println("wha i found at end"+ status);
           
             } else {
                 System.out.println("Variable " + varName + " not found in symbol table.");
@@ -335,7 +344,7 @@ private boolean typeCheckAlgo(Node algo) {
 // Type check instructions
 private boolean typeCheckInstruc1(Node instruc) {
     // Base case: No instructions
-    System.out.println("I'm inside instruc");
+   // System.out.println("I'm inside instruc");
     if (instruc == null) {
         return true; // No instructions to check
     }
@@ -362,7 +371,7 @@ private boolean typeCheckInstruc1(Node instruc) {
 
 
 private boolean typeCheckCommand(Node command) {
-    System.out.println("lets check command");
+   // System.out.println("lets check command");
       
     // Ensure the command node is valid
     if (command == null || command.childNodes.size() == 0) {
@@ -371,7 +380,7 @@ private boolean typeCheckCommand(Node command) {
 
     // Get the first child node to determine the type of command
     String commandType = command.childNodes.get(0).NodeName;
-    System.out.println("Processing command type: " + commandType);
+    //System.out.println("Processing command type: " + commandType);
 
     // Handle "skip" and "halt" commands (base cases)
     if (commandType.equals("skip") || commandType.equals("halt")) {
@@ -383,8 +392,8 @@ private boolean typeCheckCommand(Node command) {
         // Ensure there are enough child nodes
         if (command.childNodes.size() > 1) {
             Node vnameOrConstNode = command.childNodes.get(1); // Access the VNAME or CONST directly
-            System.out.println("Who I mean: " + vnameOrConstNode.NodeName); // Print the type of the node
-            System.out.println("Who my child is: " + vnameOrConstNode); // Print the entire node for debugging
+           // System.out.println("Who I mean: " + vnameOrConstNode.NodeName); // Print the type of the node
+           // System.out.println("Who my child is: " + vnameOrConstNode); // Print the entire node for debugging
             typeCheckAtomic(vnameOrConstNode);
             // Check if the node is a VNAME or CONST
             //return typeCheckAtomic(vnameOrConstNode); // Validate if it's a valid atomic value
@@ -397,12 +406,12 @@ private boolean typeCheckCommand(Node command) {
     
     else if (commandType.equals("ASSIGN")) {
         // Implement your logic for assignment commands
-        System.out.println("entering command");
+      //  System.out.println("entering command");
          return typeCheckAssign(command.childNodes.get(0));
         
     }
     else if(commandType.equals("BRANCH")){
-        System.out.println("entering the branch");
+      //  System.out.println("entering the branch");
       return typeCheckBranch(command.childNodes.get(0));
 
     }
@@ -410,12 +419,12 @@ private boolean typeCheckCommand(Node command) {
 
         if (command.childNodes.size() > 1) {
             Node vnameOrConstNode = command.childNodes.get(1); // Access the VNAME or CONST directly
-            System.out.println("Who I mean: " + vnameOrConstNode.NodeName); // Print the type of the node
-            System.out.println("Who my child is: " + vnameOrConstNode); // Print the entire node for debugging
+          ///  System.out.println("Who I mean: " + vnameOrConstNode.NodeName); // Print the type of the node
+           // System.out.println("Who my child is: " + vnameOrConstNode); // Print the entire node for debugging
             typeCheckAtomic(vnameOrConstNode);
     }}
     else if(commandType.equals("CALL")){
-    System.out.println("entering call to call");
+  //  System.out.println("entering call to call");
       return typeCheckCall(command.childNodes.get(0));
    }
   
@@ -425,7 +434,7 @@ return true;
 private boolean typeCheckAssign(Node assignNode) {
     // Ensure the node is indeed an ASSIGN type
     if (!assignNode.NodeName.equals("ASSIGN")) {
-        System.out.println("Error: Expected ASSIGN node but found: " + assignNode.NodeName);
+       // System.out.println("Error: Expected ASSIGN node but found: " + assignNode.NodeName);
         return false;
     }
 
@@ -442,14 +451,14 @@ private boolean typeCheckAssign(Node assignNode) {
 
     // Validate the variable name
     if (!vnameNode.NodeName.equals("VNAME")) {
-        System.out.println("Error: Expected VNAME in assignment but found: " + vnameNode.NodeName);
+       // System.out.println("Error: Expected VNAME in assignment but found: " + vnameNode.NodeName);
         return false;
     }
 
     // Check if the variable exists in the symbol table
     VariableProps varProps = getVariableProps(vnameNode.childNodes.get(0).NodeName);
     if (varProps == null) {
-        System.out.println("Error: Variable not found in symbol table: " + vnameNode.childNodes.get(0).NodeName);
+      //  System.out.println("Error: Variable not found in symbol table: " + vnameNode.childNodes.get(0).NodeName);
         return false;
     }
 
@@ -462,7 +471,7 @@ private boolean typeCheckAssign(Node assignNode) {
         return false; // If term type is not valid
     }
 
-    System.out.println("Assigning " + varType + " to " + termType);
+   // System.out.println("Assigning " + varType + " to " + termType);
 
     // Check if the variable type is numeric and matches the input
     if (varType.equals("n") && !isNumeric(termNode)) {
@@ -475,7 +484,7 @@ private boolean typeCheckAssign(Node assignNode) {
         System.out.println("Error: Type mismatch. Cannot assign " + termType + " to " + varType);
         return false; // The types must match
     }
-            System.out.println("assigned properly");
+          //  System.out.println("assigned properly");
     return true; // The assignment is valid
 }
 
@@ -515,7 +524,7 @@ private boolean typeCheckAtomic(Node atomic) {
 }
 
 private String typeCheckTerm(Node term) {
-    System.out.println("whats entering term: " + term.NodeName);
+  //  System.out.println("whats entering term: " + term.NodeName);
     if (term.childNodes.size() > 0) {
         Node firstChild = term.childNodes.get(0);
 
@@ -531,7 +540,7 @@ private String typeCheckTerm(Node term) {
         }
     
        else if (firstChild.NodeName.equals("CALL")) {
-        System.out.println("starting here");
+       // System.out.println("starting here");
        return typecheckCallTerm(firstChild);
        }
     
@@ -556,7 +565,7 @@ private String typeCheckTerm(Node term) {
 
 
 private boolean typeCheckCall(Node callNode) {
-    System.out.println("inside call function");
+   // System.out.println("inside call function");
     
     // Check if the call node has at least 4 children: function name + 3 parameters
     if (callNode.childNodes.size() < 4) {
@@ -566,7 +575,7 @@ private boolean typeCheckCall(Node callNode) {
 
     // Get the function name
     String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName; 
-    System.out.println("function name: " + functionName);
+   // System.out.println("function name: " + functionName);
 
     // Traverse into the ATOMIC nodes
     String type1 = typeCheckAtomics(callNode.childNodes.get(1).childNodes.get(0)); // First parameter's atomic value
@@ -577,7 +586,7 @@ private boolean typeCheckCall(Node callNode) {
     if ("num".equals(type1) && "num".equals(type2) && "num".equals(type3)) {
          
         VariableProps functionProps = getVariableProps(functionName);
-        System.out.println("need to get this functions return type"+ functionName);
+       // System.out.println("need to get this functions return type"+ functionName);
 
         return true;
     }
@@ -603,7 +612,7 @@ private boolean typeCheckCall(Node callNode) {
 
 
     String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName; 
-    System.out.println("function name: " + functionName);
+   // System.out.println("function name: " + functionName);
     VariableProps functionProps = getVariableProps(functionName);
     if (functionProps != null) {
       
@@ -664,7 +673,7 @@ private String typeCheckArg(Node argNode) {
 }
 
 private String typeCheckBinop(Node binopNode) {
-    System.out.println("i enter binop");
+   // System.out.println("i enter binop");
     // Ensure the node has enough children: BINOP, ARG1, and ARG2
     if (binopNode.childNodes.size() < 3) {
         System.out.println("Error: BINOP must have two arguments.");
@@ -696,32 +705,44 @@ private String typeCheckBinop(Node binopNode) {
 
 // Type checking for BINOP (e.g., "or", "and", "eq", "grt", "add", "sub", "mul", "div")
 private String typeCheckBinopType(Node binopNode) {
-    String binopName = binopNode.NodeName;
+    // Make sure the binopNode has at least one child (the operator)
+    if (binopNode.childNodes.size() < 1) {
+        System.out.println("Error: BINOP node has no operator.");
+        return "u";  // Undefined
+    }
+
+    // Get the operator from the first child
+    String binopName = binopNode.childNodes.get(0).NodeName;
+   // System.out.println("BINOP operator: " + binopName);
 
     // Check if BINOP is boolean
     if (binopName.equals("or") || binopName.equals("and")) {
         return "bool";  // Boolean type
-    } 
+    }
     // Check if BINOP is a comparison operator
     else if (binopName.equals("eq") || binopName.equals("grt")) {
+      //  System.out.println("Entering eq");
         return "c";  // Comparison type
-    } 
+    }
     // Check if BINOP is a numeric operator
     else if (binopName.equals("add") || binopName.equals("sub") || binopName.equals("mul") || binopName.equals("div")) {
         return "num";  // Numeric type
-    } 
+    }
     else {
-        System.out.println("Error: Invalid BINOP: " + binopName);
+        System.out.println("Error: Invalid BINOP operator: " + binopName);
         return "u";  // Undefined if unrecognized BINOP
     }
 }
+
+
+
 
 // Reuse the typeCheckArg method for both ARG1 and ARG2 (same as defined earlier)
 
 
 
 private String typeCheckAtomics(Node atomic) {
-    System.out.println("atomic node: " + atomic.NodeName);  // Directly log the atomic node name
+   // System.out.println("atomic node: " + atomic.NodeName);  // Directly log the atomic node name
 
     if (atomic.NodeName.startsWith("V_")) {  // Assuming variable names start with "V_"
         // Lookup the variable in the symbol table by its name (which is atomic.NodeName)
@@ -732,7 +753,7 @@ private String typeCheckAtomics(Node atomic) {
             return "u";  // Undefined if variable not found
         }
         // Return the type of the variable (e.g., "num", "text")
-        System.out.println("Returning variable type: " + varProps.varType);
+       // System.out.println("Returning variable type: " + varProps.varType);
         return varProps.varType;  
     } else if (atomic.NodeName.equals("CONST")) {
         // Determine if the constant is a number or text
@@ -740,7 +761,8 @@ private String typeCheckAtomics(Node atomic) {
         
         // Check if it's a numeric constant
         if (constValue.matches("-?[0-9]+(\\.[0-9]+)?")) {
-            System.out.print( "const value ha this "+constValue);
+           // System.out.print( "const value ha this "+constValue);
+          //  System.out.println("im returning correctly");
             return "num";  // Numeric constant
         }
         // Check if it's a text constant
@@ -764,7 +786,7 @@ private String typeCheckAtomics(Node atomic) {
 private String typeCheckConst(Node constNode) {
     // Assuming constNode has a single child node containing the value
     String constValue = constNode.childNodes.get(0).NodeName; // Get the value of the constant
-    System.out.println("Checking constant value: " + constValue);
+   // System.out.println("Checking constant value: " + constValue);
 
     if (constValue.matches("-?[0-9]+(\\.[0-9]+)?")) {  // Check for numeric constant
         return "num";  // Return "num" for numeric constants
@@ -791,9 +813,9 @@ private boolean typeCheckBranch(Node branchNode) {
 
     // Type-check the condition (COND)
     String condType = typeCheckCond(condNode);
-    
+   // System.out.println("final condtype is"+ condType);
     // If the condition is a boolean ('b'), type-check both branches
-    if (condType.equals("bool")||condType.equals("num")) {
+    if (condType.equals("bool")) {
         return typeCheckAlgo(algo1Node) && typeCheckAlgo(algo2Node);
     } else {
         System.out.println("Error: COND in BRANCH must evaluate to boolean. Received: " + condType);
@@ -802,7 +824,9 @@ private boolean typeCheckBranch(Node branchNode) {
 }
 private String typeCheckCond(Node condNode) {
     // Cond can be SIMPLE or COMPOSIT
+   
     if (condNode.NodeName.equals("SIMPLE")) {
+       
         return typeCheckSimple(condNode);
     } else if (condNode.NodeName.equals("COMPOSIT")) {
         return typeCheckComposit(condNode);
@@ -813,29 +837,43 @@ private String typeCheckCond(Node condNode) {
 }
 private String typeCheckSimple(Node simpleNode) {
     // SIMPLE is of the form BINOP( ATOMIC1, ATOMIC2 )
-    if (simpleNode.childNodes.size() < 3) {
-        System.out.println("Error: SIMPLE must have a BINOP and two ATOMICs.");
+    if (simpleNode.childNodes.size() < 1) {
+        System.out.println("Error: SIMPLE must have at least a BINOP.");
         return "u";  // Undefined
     }
 
-    String binopType = typeCheckBinopType(simpleNode.childNodes.get(0));  // BINOP
-    String atomic1Type = typeCheckAtomics(simpleNode.childNodes.get(1));  // ATOMIC1
-    String atomic2Type = typeCheckAtomics(simpleNode.childNodes.get(2));  // ATOMIC2
+    // Get the BINOP node
+    Node binopNode = simpleNode.childNodes.get(0);
+    String binopType = typeCheckBinopType(binopNode);  // Get the type of the BINOP
 
+    // Check that there are two ATOMIC children
+    if (binopNode.childNodes.size() < 2) {
+        System.out.println("Error: BINOP must have two ATOMICs.");
+        return "u";  // Undefined
+    }
+
+    // Get the atomic children
+    String atomic1Type = typeCheckAtomics(binopNode.childNodes.get(1));  // ATOMIC1
+    String atomic2Type = typeCheckAtomics(binopNode.childNodes.get(2));  // ATOMIC2
+     // System.out.println("binop type"+binopType);
     // Handle boolean BINOP (e.g., and, or) with boolean ATOMICs
     if (binopType.equals("bool") && atomic1Type.equals("bool") && atomic2Type.equals("bool")) {
         return "bool";  // Boolean result
     }
     // Handle comparison BINOP (e.g., eq, grt) with numeric ATOMICs
     else if (binopType.equals("c") && atomic1Type.equals("num") && atomic2Type.equals("num")) {
-        return "bool";  // Comparison results in a boolean
-    } else {
+        return "bool"; }
+        else if (binopType.equals("num") && atomic1Type.equals("num") && atomic2Type.equals("num")) {
+            return "bool"; }
+   else {
         System.out.println("Error: Invalid types in SIMPLE. BINOP: " + binopType + ", ATOMIC1: " + atomic1Type + ", ATOMIC2: " + atomic2Type);
         return "u";  // Undefined
     }
 }
+
 private String typeCheckComposit(Node compositNode) {
-    // COMPOSIT ::= BINOP( SIMPLE1, SIMPLE2 ) or UNOP( SIMPLE )
+   // System.out.println("entering composit");
+    // COMPOSIT ::= BINOP(SIMPLE1, SIMPLE2) or UNOP(SIMPLE)
     if (compositNode.NodeName.equals("BINOP")) {
         // COMPOSIT is of the form BINOP(SIMPLE1, SIMPLE2)
         if (compositNode.childNodes.size() < 3) {
@@ -843,6 +881,7 @@ private String typeCheckComposit(Node compositNode) {
             return "u";  // Undefined
         }
 
+        // Get the binopNode and ensure it has the right structure
         String binopType = typeCheckBinopType(compositNode.childNodes.get(0));  // BINOP
         String simple1Type = typeCheckSimple(compositNode.childNodes.get(1));  // SIMPLE1
         String simple2Type = typeCheckSimple(compositNode.childNodes.get(2));  // SIMPLE2
@@ -876,6 +915,7 @@ private String typeCheckComposit(Node compositNode) {
         return "u";  // Undefined
     }
 }
+
 private String typeCheckUnopType(Node unopNode) {
     String unopName = unopNode.NodeName;
 
@@ -913,7 +953,7 @@ public boolean typeCheckFunctions(Node root) {
     // Assuming FUNCTIONS1 structure where root has child nodes representing DECL and FUNCTIONS2
     for (Node child : root.childNodes) {
         if (child.NodeName.equals("DECL")) {
-            System.out.println("entering DECL");
+           // System.out.println("entering DECL");
             // Perform typecheck on DECL node
             if (!typeCheckDecl(child)) {
                 return false;
@@ -934,7 +974,7 @@ public boolean typeCheckFunctions(Node root) {
 
 // This method checks a single function declaration.
 private boolean typeCheckDecl(Node decl) {
-    System.out.println("i enter decl");
+   // System.out.println("i enter decl");
     return typeCheckHeader(decl) && typeCheckBody(decl);
 }
 
@@ -947,23 +987,23 @@ private boolean typeCheckHeader(Node decl) {
         // Extract FTYP, FNAME, and VNAMEs from HEADER
         Node ftypNode = headerNode.childNodes.get(0);  // FTYP node
         Node ftyp = ftypNode.childNodes.get(0);        // Go deeper into FTYP
-        System.out.println("Function type: " + ftyp.NodeName);
+       // System.out.println("Function type: " + ftyp.NodeName);
 
         Node fnameNode = headerNode.childNodes.get(1);  // FNAME node
         Node fname = fnameNode.childNodes.get(0);       // Go deeper into FNAME
-        System.out.println("Function name: " + fname.NodeName);
+       // System.out.println("Function name: " + fname.NodeName);
 
         Node vname1Node = headerNode.childNodes.get(2);  // VNAME1 node
         Node vname1 = vname1Node.childNodes.get(0);      // Go deeper into VNAME1
-        System.out.println("vname1: " + vname1.NodeName);
+       // System.out.println("vname1: " + vname1.NodeName);
 
         Node vname2Node = headerNode.childNodes.get(3);  // VNAME2 node
         Node vname2 = vname2Node.childNodes.get(0);      // Go deeper into VNAME2
-        System.out.println("vname2: " + vname2.NodeName);
+       // System.out.println("vname2: " + vname2.NodeName);
 
         Node vname3Node = headerNode.childNodes.get(4);  // VNAME3 node
         Node vname3 = vname3Node.childNodes.get(0);      // Go deeper into VNAME3
-        System.out.println("vname3: " + vname3.NodeName);
+       // System.out.println("vname3: " + vname3.NodeName);
         
         // Validate function type, function name, and ensure VNAMEs are numeric
         return validateFTypeAndFname(ftyp, fname) && 
@@ -982,7 +1022,7 @@ private boolean validateVName(Node vname) {
     VariableProps varProps = getVariableProps(varName);
     
     if (varProps != null) {
-        System.out.println("Validating variable: " + varProps.oldName + " with Type: " + varProps.varType);
+       // System.out.println("Validating variable: " + varProps.oldName + " with Type: " + varProps.varType);
         // Check if the variable is of numeric type 'n'
         if (varProps.varType.equals("num")) {
             return true;  // VNAME is valid and numeric
@@ -1006,7 +1046,7 @@ private boolean validateFTypeAndFname(Node ftyp, Node fname) {
     
     // Check if varProps is not null and compare types
     if (varProps != null) {
-        System.out.println("Found function: " + varProps.oldName + " with Type: " + varProps.varType);
+        //System.out.println("Found function: " + varProps.oldName + " with Type: " + varProps.varType);
         
         // Validate function name and type
         if (varProps.oldName.equals(functionName) && varProps.varType.equals(functionType)) {
@@ -1024,7 +1064,7 @@ private boolean validateFTypeAndFname(Node ftyp, Node fname) {
 
 // This method checks the function body.
 private boolean typeCheckBody(Node body) {
-     System.out.println("type checking body");
+   //  System.out.println("type checking body");
     return typeCheckProlog(body)
         && typeCheckLocVars(body)
         && typeCheckAlgo(body)
@@ -1034,7 +1074,7 @@ private boolean typeCheckBody(Node body) {
 
 // Check prolog, always returns true as per base case.
 private boolean typeCheckProlog(Node prolog) {
-    System.out.println("inside prlog");
+   // System.out.println("inside prlog");
     return true; // Base case
 }
 
@@ -1052,7 +1092,7 @@ private boolean typeCheckLocVars(Node declNode) {
         System.out.println("Error: Missing HEADER in DECL.");
         return false;
     }
-System.out.println("inside localvars");
+//System.out.println("inside localvars");
     String varType = "";
     boolean status = true; // Assume success until proven otherwise
 
@@ -1063,7 +1103,7 @@ System.out.println("inside localvars");
             while (varType.endsWith(":")) {
                 varType = varType.substring(0, varType.length() - 1);
             }
-            System.out.println("Variable TYPE: " + varType);
+          //  System.out.println("Variable TYPE: " + varType);
         } 
         else if (child.NodeName.equals("VNAME")) {
             // Retrieve and clean the variable name
@@ -1071,19 +1111,19 @@ System.out.println("inside localvars");
             while (varName.endsWith(":")) {
                 varName = varName.substring(0, varName.length() - 1);
             }
-            System.out.println("Variable NAME: " + varName);
-            
+            //System.out.println("Variable NAME: " + varName);
+           // 
             // Retrieve the variable properties from the symbol table
             VariableProps varProps = getVariableProps(varName);
             
             // Check if varProps is not null and compare types
             if (varProps != null) {
-                System.out.println("Found Variable: " + varProps.oldName + " with Type: " + varProps.varType);
+              //  System.out.println("Found Variable: " + varProps.oldName + " with Type: " + varProps.varType);
                 if (!varProps.varType.equals(varType)) {
-                    System.out.println("Type mismatch for variable: " + varName + ". Found: " + varProps.varType + ", Expected: " + varType);
+                  //  System.out.println("Type mismatch for variable: " + varName + ". Found: " + varProps.varType + ", Expected: " + varType);
                     return false; // Type mismatch
                 }
-                System.out.println("Variable " + varName + " matches type: " + varType);
+               // System.out.println("Variable " + varName + " matches type: " + varType);
             } else {
                 System.out.println("Variable " + varName + " not found in symbol table.");
                 return false; // Variable not found
@@ -1101,13 +1141,13 @@ System.out.println("inside localvars");
 
 // Check the epilog, always returns true as per base case.
 private boolean typeCheckEpilog(Node epilog) {
-    System.out.println("entering epilog");
+   // System.out.println("entering epilog");
     return true; // Base case
 }
 
 // Check sub-functions.
 private boolean typeCheckSubFunctions(Node subFunctions) {
-    System.out.println("leaving subfunctions");
+   // System.out.println("leaving subfunctions");
     return typeCheckFunctions(subFunctions);
 }
 
