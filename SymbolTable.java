@@ -28,7 +28,7 @@ public class SymbolTable {
         }
         System.out.println("-------------------------------------------------------");
         System.out.println("Finished scope analysis");
-       // typeCheck(root);
+       typeCheck(root);
     }
 
    // public HashMap<String, VariableProps> getTable() {
@@ -218,38 +218,49 @@ public boolean typeCheck(Node root) {
     if (root == null) {
         return false; // Handle null case
     }
-    
+
     // Ensure we're processing the PROG node
-    if (root.NodeName.equals("PROG")) {
-        System.out.println("Type checking PROG");
-
-        // Loop through the children of PROG
-        for (Node child : root.childNodes) {
-            if (child.NodeName.equals("ALGO")) {
-                System.out.println("sending algo to command");
-                // Type check each GLOBVARS node
-                if (!typeCheckAlgo(child)) {
-                    return false; // Return false if any GLOBVARS fails
-                }
-            }
-        }
-        return true; // All GLOBVARS passed type checking
-    } else if (root.NodeName.equals("PROG")) {
-        System.out.println("Type checking ALgo");
-
-        // Loop through the children of PROG
-        for (Node child : root.childNodes) {
-            if (child.NodeName.equals("ALGO")) {
-                // Type check each GLOBVARS node
-                if (!typeCheckAlgo(child)) {
-                    return false; // Return false if any GLOBVARS fails
-                }
-            }
-        }
-        return true; // All GLOBVARS passed type checking
+    if (!root.NodeName.equals("PROG")) {
+        System.out.println("Error: Expected PROG node, found: " + root.NodeName);
+        return false;
     }
-    
-    System.out.println("Error: Expected PROG node, found: " + root.NodeName);
+
+    System.out.println("Type checking PROG");
+
+    boolean globVarsPassed = false;
+    boolean algoPassed = false;
+    boolean functionsPassed = false;
+
+    // Loop through the children of PROG
+    for (Node child : root.childNodes) {
+        if (child.NodeName.equals("GLOBVARS")) {
+            System.out.println("Type checking GLOBVARS");
+            if (!typeCheckGLOVARS1(child)) {
+                return false; // Return false if GLOBVARS fails
+            }
+            globVarsPassed = true;
+        } else if (child.NodeName.equals("ALGO")) {
+            System.out.println("Type checking ALGO");
+            if (!typeCheckAlgo(child)) {
+                return false; // Return false if ALGO fails
+            }
+            algoPassed = true;
+        } else if (child.NodeName.equals("FUNCTIONS")) {
+            System.out.println("Type checking FUNCTIONS");
+            if (!typeCheckFunctions(child)) {
+                return false; // Return false if FUNCTIONS fails
+            }
+            functionsPassed = true;
+        }
+    }
+
+    // Ensure all three sections passed type checking
+    if (globVarsPassed && algoPassed && functionsPassed) {
+        return true;
+    }
+
+    // If any section was missing, return false
+    System.out.println("Error: Missing GLOBVARS, ALGO, or FUNCTIONS in PROG.");
     return false;
 }
 
@@ -894,41 +905,126 @@ private String typeCheckUnopType(Node unopNode) {
 
 
 public boolean typeCheckFunctions(Node root) {
-    // Base case: no functions to check.
-    if (root==null) {
+    // Base case: no functions to check
+    if (root == null) {
         return true;
     }
 
-   
+    // Assuming FUNCTIONS1 structure where root has child nodes representing DECL and FUNCTIONS2
+    for (Node child : root.childNodes) {
+        if (child.NodeName.equals("DECL")) {
+            System.out.println("entering DECL");
+            // Perform typecheck on DECL node
+            if (!typeCheckDecl(child)) {
+                return false;
+            }
+        }
+        else if (child.NodeName.equals("FUNCTIONS")) {
+            // Recursively check the remaining functions
+            if (!typeCheckFunctions(child)) {
+                return false;
+            }
+        }
+    }
 
+    // If all declarations and functions passed type-checking
     return true;
 }
 
+
 // This method checks a single function declaration.
-private boolean typeCheckDeclaration(Node decl) {
+private boolean typeCheckDecl(Node decl) {
+    System.out.println("i enter decl");
     return typeCheckHeader(decl) && typeCheckBody(decl);
 }
 
 // This method checks the function header.
-private boolean typeCheckHeader(Node header) {
-  //  String returnType = typeof(header.getReturnType());
-   // String functionName = header.getFunctionName();
+private boolean typeCheckHeader(Node decl) {
+    // Assuming HEADER is the first child of DECL
+    Node headerNode = decl.childNodes.get(0);
+    
+    if (headerNode.NodeName.equals("HEADER")) {
+        // Extract FTYP, FNAME, and VNAMEs from HEADER
+        Node ftypNode = headerNode.childNodes.get(0);  // FTYP node
+        Node ftyp = ftypNode.childNodes.get(0);        // Go deeper into FTYP
+        System.out.println("Function type: " + ftyp.NodeName);
 
-    // Link return type to function name in the symbol table.
-    //symbolTable.link(functionName, returnType);
+        Node fnameNode = headerNode.childNodes.get(1);  // FNAME node
+        Node fname = fnameNode.childNodes.get(0);       // Go deeper into FNAME
+        System.out.println("Function name: " + fname.NodeName);
 
-    // Check argument types.
-   /*  for (String argType : header.getArgumentTypes()) {
-        if (!argType.equals("n")) { // Only allow numeric arguments.
-            return false;
-        }
-    }/* */
+        Node vname1Node = headerNode.childNodes.get(2);  // VNAME1 node
+        Node vname1 = vname1Node.childNodes.get(0);      // Go deeper into VNAME1
+        System.out.println("vname1: " + vname1.NodeName);
 
-    return true;
+        Node vname2Node = headerNode.childNodes.get(3);  // VNAME2 node
+        Node vname2 = vname2Node.childNodes.get(0);      // Go deeper into VNAME2
+        System.out.println("vname2: " + vname2.NodeName);
+
+        Node vname3Node = headerNode.childNodes.get(4);  // VNAME3 node
+        Node vname3 = vname3Node.childNodes.get(0);      // Go deeper into VNAME3
+        System.out.println("vname3: " + vname3.NodeName);
+        
+        // Validate function type, function name, and ensure VNAMEs are numeric
+        return validateFTypeAndFname(ftyp, fname) && 
+               validateVName(vname1) && 
+               validateVName(vname2) && 
+               validateVName(vname3);
+    }
+    
+    System.out.println("Error: Missing HEADER in DECL.");
+    return false;
 }
+
+private boolean validateVName(Node vname) {
+    // Retrieve the variable properties for the VNAME
+    String varName = vname.NodeName;
+    VariableProps varProps = getVariableProps(varName);
+    
+    if (varProps != null) {
+        System.out.println("Validating variable: " + varProps.oldName + " with Type: " + varProps.varType);
+        // Check if the variable is of numeric type 'n'
+        if (varProps.varType.equals("num")) {
+            return true;  // VNAME is valid and numeric
+        } else {
+            System.out.println("Error: VNAME " + varProps.oldName + " is not of numeric type.");
+            return false;  // VNAME is not numeric
+        }
+    } else {
+        System.out.println("Error: VNAME " + varName + " not found in the symbol table.");
+        return false;  // VNAME not found
+    }
+}
+
+private boolean validateFTypeAndFname(Node ftyp, Node fname) {
+    // Get the function name and type
+    String functionName = fname.NodeName;
+    String functionType = ftyp.NodeName;
+
+    // Retrieve the function properties from the symbol table (assuming this method exists)
+    VariableProps varProps = getVariableProps(functionName);
+    
+    // Check if varProps is not null and compare types
+    if (varProps != null) {
+        System.out.println("Found function: " + varProps.oldName + " with Type: " + varProps.varType);
+        
+        // Validate function name and type
+        if (varProps.oldName.equals(functionName) && varProps.varType.equals(functionType)) {
+            return true;  // Valid function name and type
+        } else {
+            System.out.println("Error: Function name or type mismatch.");
+            return false;  // Mismatch in function name or type
+        }
+    } else {
+        System.out.println("Error: Function not found in the symbol table.");
+        return false;  // Function not found in the symbol table
+    }
+}
+
 
 // This method checks the function body.
 private boolean typeCheckBody(Node body) {
+     System.out.println("type checking body");
     return typeCheckProlog(body)
         && typeCheckLocVars(body)
         && typeCheckAlgo(body)
@@ -938,52 +1034,85 @@ private boolean typeCheckBody(Node body) {
 
 // Check prolog, always returns true as per base case.
 private boolean typeCheckProlog(Node prolog) {
+    System.out.println("inside prlog");
     return true; // Base case
 }
 
 // Check the local variables.
-private boolean typeCheckLocVars(Node localVars) {
-    /* *for (LocalVar var : localVars.getVariables()) {
-        String type = typeof(var.getType());
-        String name = var.getName();
+private boolean typeCheckLocVars(Node declNode) {
+    // Ensure that we're processing the DECL node
+    if (declNode == null || !declNode.NodeName.equals("DECL")) {
+        System.out.println("Error: Invalid DECL node.");
+        return false;
+    }
 
-        // Link variable type to its name in the symbol table.
-        symbolTable.link(name, type);
+    Node headerNode = declNode.childNodes.get(0); // Get the HEADER node
 
-        // Ensure the variable type matches.
-        if (!var.getType().equals(type)) {
-            return false;
+    if (headerNode == null || !headerNode.NodeName.equals("HEADER")) {
+        System.out.println("Error: Missing HEADER in DECL.");
+        return false;
+    }
+System.out.println("inside localvars");
+    String varType = "";
+    boolean status = true; // Assume success until proven otherwise
+
+    // Loop through the child nodes of the HEADER node to find VNAMEs
+    for (Node child : headerNode.childNodes) {
+        if (child.NodeName.equals("FTYP")) {
+            varType = getChildValue(child).trim(); // Clean the variable type
+            while (varType.endsWith(":")) {
+                varType = varType.substring(0, varType.length() - 1);
+            }
+            System.out.println("Variable TYPE: " + varType);
+        } 
+        else if (child.NodeName.equals("VNAME")) {
+            // Retrieve and clean the variable name
+            String varName = getChildValue(child).trim();
+            while (varName.endsWith(":")) {
+                varName = varName.substring(0, varName.length() - 1);
+            }
+            System.out.println("Variable NAME: " + varName);
+            
+            // Retrieve the variable properties from the symbol table
+            VariableProps varProps = getVariableProps(varName);
+            
+            // Check if varProps is not null and compare types
+            if (varProps != null) {
+                System.out.println("Found Variable: " + varProps.oldName + " with Type: " + varProps.varType);
+                if (!varProps.varType.equals(varType)) {
+                    System.out.println("Type mismatch for variable: " + varName + ". Found: " + varProps.varType + ", Expected: " + varType);
+                    return false; // Type mismatch
+                }
+                System.out.println("Variable " + varName + " matches type: " + varType);
+            } else {
+                System.out.println("Variable " + varName + " not found in symbol table.");
+                return false; // Variable not found
+            }
         }
-    }/* */
+    }
 
-    return true;
+    // Return true if all variables are successfully checked
+    return status;
 }
+
 
 // Check the main algorithm.
 
 
 // Check the epilog, always returns true as per base case.
 private boolean typeCheckEpilog(Node epilog) {
+    System.out.println("entering epilog");
     return true; // Base case
 }
 
 // Check sub-functions.
 private boolean typeCheckSubFunctions(Node subFunctions) {
-    
-    return true;
+    System.out.println("leaving subfunctions");
+    return typeCheckFunctions(subFunctions);
 }
 
 // Simulated method to get type of a given variable/type.
-private String typeof(String type) {
-    switch (type) {
-        case "num":
-            return "n"; // Numeric return type
-        case "void":
-            return "v"; // Void return type
-        default:
-            return "unknown"; // Unknown type
-    }
-}
+
 
 
 

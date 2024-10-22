@@ -33,6 +33,7 @@ num F_next(V_a,V_b,V_c) {
           
             V_secret= "Car";
         end ;
+        return "Bibo";
     end
     }
     
