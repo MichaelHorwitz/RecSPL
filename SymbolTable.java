@@ -793,7 +793,7 @@ private boolean typeCheckBranch(Node branchNode) {
     String condType = typeCheckCond(condNode);
     
     // If the condition is a boolean ('b'), type-check both branches
-    if (condType.equals("bool")) {
+    if (condType.equals("bool")||condType.equals("num")) {
         return typeCheckAlgo(algo1Node) && typeCheckAlgo(algo2Node);
     } else {
         System.out.println("Error: COND in BRANCH must evaluate to boolean. Received: " + condType);
@@ -848,8 +848,8 @@ private String typeCheckComposit(Node compositNode) {
         String simple2Type = typeCheckSimple(compositNode.childNodes.get(2));  // SIMPLE2
 
         // Boolean BINOP with boolean SIMPLEs
-        if (binopType.equals("b") && simple1Type.equals("b") && simple2Type.equals("b")) {
-            return "b";  // Boolean result
+        if (binopType.equals("bool") && simple1Type.equals("bool") && simple2Type.equals("bool")) {
+            return "bool";  // Boolean result
         } else {
             System.out.println("Error: Invalid types in COMPOSIT. BINOP: " + binopType + ", SIMPLE1: " + simple1Type + ", SIMPLE2: " + simple2Type);
             return "u";  // Undefined
@@ -865,8 +865,8 @@ private String typeCheckComposit(Node compositNode) {
         String simpleType = typeCheckSimple(compositNode.childNodes.get(1));  // SIMPLE
 
         // Boolean UNOP with boolean SIMPLE
-        if (unopType.equals("b") && simpleType.equals("b")) {
-            return "b";  // Boolean result
+        if (unopType.equals("bool") && simpleType.equals("bool")) {
+            return "bool";  // Boolean result
         } else {
             System.out.println("Error: Invalid types in COMPOSIT UNOP. UNOP: " + unopType + ", SIMPLE: " + simpleType);
             return "u";  // Undefined

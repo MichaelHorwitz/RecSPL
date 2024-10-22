@@ -33,8 +33,8 @@ public class RecSPLMain {
                     System.out.println("Parsing Error: The program could not be parsed.");
                 }
 
-                SymbolTable symbolTable = new SymbolTable();
-            symbolTable.generateFromTree(parser.headNode);
+                //SymbolTable symbolTable = new SymbolTable();
+            //symbolTable.generateFromTree(parser.headNode);
                // symbolTable.printTable();
                
              //  SymbolTable2 TC = new SymbolTable2(parser.headNode);

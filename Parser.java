@@ -592,21 +592,21 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
             if (token.equals("not") || token.equals("sqrt")) {
                 Node unopNode = new Node("UNOP");
                 unopNode.line = tokenList.get(0).line;
-                unopNode.childNodes.add(new Node(token));
+                unopNode.childNodes.add(new Node(token));  // Add the operator (e.g., "not" or "sqrt")
                 pNode.childNodes.add(unopNode);
                 tokenList.remove(0);  // Consume the unary operator
     
-                // Expect opening parenthesis
+                // Check for opening parenthesis
                 if (tokenList.size() > 0 && tokenList.get(0).name.equals("(")) {
                     tokenList.remove(0);  // Consume '('
     
-                    ARG(unopNode);  // Parse the argument
+                    ARG(unopNode);  // Parse the argument (which could be ATOMIC or OP)
     
                     // Expect closing parenthesis
                     if (tokenList.size() > 0 && tokenList.get(0).name.equals(")")) {
                         tokenList.remove(0);  // Consume ')'
                     } else {
-                        System.err.println("Syntax Error: Expected ')' after unary operation.");
+                        System.err.println("Syntax Error: Expected ')' after argument in UNOP.");
                         System.exit(1);
                     }
                 } else {
@@ -617,6 +617,8 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
         }
     }
     
+    
+    
     public void BINOP(Node pNode) {  // BINOP ::= or | and | eq | grt | add | sub | mul | div
         if (tokenList.size() > 0) {
             String token = tokenList.get(0).name;
@@ -626,31 +628,31 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
                 token.equals("add") || token.equals("sub") || token.equals("mul") || token.equals("div")) {
                 Node binopNode = new Node("BINOP");
                 binopNode.line = tokenList.get(0).line;
-                binopNode.childNodes.add(new Node(token));
+                binopNode.childNodes.add(new Node(token));  // Add the binary operator (e.g., "add", "sub")
                 pNode.childNodes.add(binopNode);
                 tokenList.remove(0);  // Consume the binary operator
     
-                // Expect opening parenthesis
+                // Check for opening parenthesis
                 if (tokenList.size() > 0 && tokenList.get(0).name.equals("(")) {
                     tokenList.remove(0);  // Consume '('
     
-                    ARG(binopNode);  // Parse the first argument
+                    ARG(binopNode);  // Parse the first argument (which could be ATOMIC or OP)
     
                     // Expect comma between arguments
                     if (tokenList.size() > 0 && tokenList.get(0).name.equals(",")) {
                         tokenList.remove(0);  // Consume ','
     
-                        ARG(binopNode);  // Parse the second argument
+                        ARG(binopNode);  // Parse the second argument (which could be ATOMIC or OP)
     
                         // Expect closing parenthesis
                         if (tokenList.size() > 0 && tokenList.get(0).name.equals(")")) {
                             tokenList.remove(0);  // Consume ')'
                         } else {
-                            System.err.println("Syntax Error: Expected ')' after second argument in binary operation.");
+                            System.err.println("Syntax Error: Expected ')' after second argument in BINOP.");
                             System.exit(1);
                         }
                     } else {
-                        System.err.println("Syntax Error: Expected ',' between arguments in binary operation.");
+                        System.err.println("Syntax Error: Expected ',' between arguments in BINOP.");
                         System.exit(1);
                     }
                 } else {
@@ -664,6 +666,17 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
         }
     }
     
+    
+   
+    
+    
+    
+    private boolean isBinaryOp(String token) {
+        return token.equals("or") || token.equals("and") || token.equals("eq") || token.equals("grt") ||
+               token.equals("add") || token.equals("sub") || token.equals("mul") || token.equals("div");
+    }
+    
+    
     public void ARG(Node pNode) {  // ARG ::= ATOMIC | OP
         if (tokenList.size() > 0) {
             String token = tokenList.get(0).name;
@@ -672,12 +685,20 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
             if (token.matches("V_[a-z]([a-z0-9])*") || token.matches("[0-9]+") || token.matches("\"[A-Za-z]+\"")) {
                 ATOMIC(pNode);  // Parse ATOMIC value
             } 
-            // If it's not an ATOMIC, it must be an OP
-            else {
-                OP(pNode);  // Parse OP (nested operation)
+            // If it's not an ATOMIC, it must be an OP (either UNOP or BINOP)
+            else if (token.equals("not") || token.equals("sqrt")) {
+                UNOP(pNode);  // Parse a unary operation
+            } else if (token.equals("or") || token.equals("and") || token.equals("eq") || token.equals("grt") ||
+                       token.equals("add") || token.equals("sub") || token.equals("mul") || token.equals("div")) {
+                BINOP(pNode);  // Parse a binary operation
+            } else {
+                System.err.println("Syntax Error: Invalid argument '" + token + "'");
+                System.exit(1);
             }
         }
     }
+    
+    
     
     public void COND(Node pNode) {  // COND ::= SIMPLE | COMPOSIT
         if (tokenList.size() > 0) {
@@ -695,99 +716,94 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
         pNode.childNodes.add(simpleNode);
     
         BINOP(simpleNode);  // Parse the binary operator
-    
-        if (tokenList.size() > 0 && tokenList.get(0).name.equals("(")) {
-            tokenList.remove(0);  // Consume '('
-    
-            ATOMIC(simpleNode);  // Parse the first atomic argument
-    
-            if (tokenList.size() > 0 && tokenList.get(0).name.equals(",")) {
-                tokenList.remove(0);  // Consume ','
-    
-                ATOMIC(simpleNode);  // Parse the second atomic argument
-    
-                if (tokenList.size() > 0 && tokenList.get(0).name.equals(")")) {
-                    tokenList.remove(0);  // Consume ')'
-                } else {
-                    System.err.println("Syntax Error: Expected ')' after second argument in SIMPLE.");
-                    System.exit(1);
-                }
-            } else {
-                System.err.println("Syntax Error: Expected ',' between arguments in SIMPLE.");
-                System.exit(1);
-            }
-        } else {
-            System.err.println("Syntax Error: Expected '(' after binary operator in SIMPLE.");
-            System.exit(1);
-        }
     }
     
     public void COMPOSIT(Node pNode) {  // COMPOSIT ::= BINOP(SIMPLE, SIMPLE) | UNOP(SIMPLE)
-        Node compositNode = new Node("COMPOSIT");
-        pNode.childNodes.add(compositNode);
+        if (tokenList.size() > 0) {
+            String token = tokenList.get(0).name;
     
-        String token = tokenList.get(0).name;
+            // Check for binary operations
+            if (isBinaryOperator(token)) {
+                Node compositNode = new Node("COMPOSIT");
+                pNode.childNodes.add(compositNode);
     
-        // Check if it's a unary or binary operation
-        if (token.equals("not") || token.equals("sqrt")) {
-            UNOP(compositNode);  // Parse the unary operator
+                // Consume the binary operator
+                tokenList.remove(0);  // Remove the binary operator
     
-            if (tokenList.size() > 0 && tokenList.get(0).name.equals("(")) {
-                tokenList.remove(0);  // Consume '('
+                // Expect opening parenthesis for the BINOP
+                if (tokenList.size() > 0 && tokenList.get(0).name.equals("(")) {
+                    tokenList.remove(0);  // Consume '('
     
-                SIMPLE(compositNode);  // Parse the simple condition
+                    // Parse the first SIMPLE
+                    SIMPLE(compositNode);  // Parse the first SIMPLE
     
-                if (tokenList.size() > 0 && tokenList.get(0).name.equals(")")) {
-                    tokenList.remove(0);  // Consume ')'
-                } else {
-                    System.err.println("Syntax Error: Expected ')' after SIMPLE in UNOP.");
-                    System.exit(1);
-                }
-            } else {
-                System.err.println("Syntax Error: Expected '(' after unary operator in COMPOSIT.");
-                System.exit(1);
-            }
-        } else {  // Must be a binary operation
-            BINOP(compositNode);  // Parse the binary operator
+                    // Expect a comma between SIMPLE arguments
+                    if (tokenList.size() > 0 && tokenList.get(0).name.equals(",")) {
+                        tokenList.remove(0);  // Consume ','
     
-            if (tokenList.size() > 0 && tokenList.get(0).name.equals("(")) {
-                tokenList.remove(0);  // Consume '('
+                        // Parse the second SIMPLE
+                        SIMPLE(compositNode);  // Parse the second SIMPLE
     
-                SIMPLE(compositNode);  // Parse the first simple condition
-    
-                if (tokenList.size() > 0 && tokenList.get(0).name.equals(",")) {
-                    tokenList.remove(0);  // Consume ','
-    
-                    SIMPLE(compositNode);  // Parse the second simple condition
-    
-                    if (tokenList.size() > 0 && tokenList.get(0).name.equals(")")) {
-                        tokenList.remove(0);  // Consume ')'
+                        // Expect closing parenthesis
+                        if (tokenList.size() > 0 && tokenList.get(0).name.equals(")")) {
+                            tokenList.remove(0);  // Consume ')'
+                        } else {
+                            System.err.println("Syntax Error: Expected ')' after second SIMPLE in COMPOSIT.");
+                            System.exit(1);
+                        }
                     } else {
-                        System.err.println("Syntax Error: Expected ')' after second SIMPLE in COMPOSIT.");
+                        System.err.println("Syntax Error: Expected ',' between SIMPLE arguments in COMPOSIT.");
                         System.exit(1);
                     }
                 } else {
-                    System.err.println("Syntax Error: Expected ',' between SIMPLEs in COMPOSIT.");
+                    System.err.println("Syntax Error: Expected '(' after binary operator in COMPOSIT.");
                     System.exit(1);
                 }
-            } //else {
-               // System.err.println("Syntax Error: Expected '(' after binary operator in COMPOSIT.");
-               // System.exit(1);
-           // }
+            } else {
+                // If it's not a binary operator, check for UNOP
+                if (token.equals("not") || token.equals("sqrt")) {
+                    UNOP(pNode);  // If it's a unary operator, parse it
+                } else {
+                    System.err.println("Syntax Error: Invalid operator for COMPOSIT: '" + token + "'");
+                    System.exit(1);
+                }
+            }
         }
     }
     
+    // Helper method to check for valid binary operators
+    private boolean isBinaryOperator(String token) {
+        return token.equals("or") || token.equals("and") || token.equals("eq") || token.equals("grt") ||
+               token.equals("add") || token.equals("sub") || token.equals("mul") || token.equals("div");
+    }
+    
+    
+    
     private boolean isSimple() {
-        // Assuming SIMPLE can be identified based on the presence of ATOMIC followed by a BINOP
-        if (tokenList.size() > 2) {
-            String token = tokenList.get(0).name;
-            String nextToken = tokenList.get(1).name;
-            return (token.matches("V_[a-z]([a-z0-9])*") || token.matches("[0-9]+") || token.matches("\"[A-Za-z]+\"")) &&
-                   (nextToken.equals("or") || nextToken.equals("and") || nextToken.equals("eq") || nextToken.equals("grt") ||
-                    nextToken.equals("add") || nextToken.equals("sub") || nextToken.equals("mul") || nextToken.equals("div"));
+        // Check if there are enough tokens to form a SIMPLE structure: BINOP(atomic, atomic)
+        if (tokenList.size() >= 6) {
+            String binOp = tokenList.get(0).name;            // Binary operator
+            String openingParen = tokenList.get(1).name;     // Opening parenthesis '('
+            String firstToken = tokenList.get(2).name;       // First atomic value
+            String comma = tokenList.get(3).name;            // Comma separator
+            String secondToken = tokenList.get(4).name;      // Second atomic value
+            String closingParen = tokenList.get(5).name;     // Closing parenthesis ')'
+    
+            // Check if the first and second tokens are atomic (variable or number)
+            boolean firstIsAtomic = firstToken.matches("V_[a-z]([a-z0-9])*") || firstToken.matches("[0-9]+") || firstToken.matches("\"[A-Za-z]+\"");
+            boolean secondIsAtomic = secondToken.matches("V_[a-z]([a-z0-9])*") || secondToken.matches("[0-9]+") || secondToken.matches("\"[A-Za-z]+\"");
+    
+            // Check if the operator is a valid binary operator
+            boolean isBinaryOperator = binOp.equals("or") || binOp.equals("and") || binOp.equals("eq") || binOp.equals("grt") ||
+                                       binOp.equals("add") || binOp.equals("sub") || binOp.equals("mul") || binOp.equals("div");
+    
+            // Ensure the structure is BINOP(ATOMIC, ATOMIC) and parentheses are present
+            return isBinaryOperator && openingParen.equals("(") && firstIsAtomic && comma.equals(",") &&
+                   secondIsAtomic && closingParen.equals(")");
         }
         return false;
     }
+    
     
     
     public void CONST(Node pNode) {  // CONST ::= a token of Token-Class N (numbers) or T (text)

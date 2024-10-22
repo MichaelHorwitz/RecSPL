@@ -1,41 +1,9 @@
 main
-    num V_secret ,
-    
-   
-   
-     num V_current ,
-    text V_bd,
-    
-     
-begin
-    print "Dab";
-    V_current =3 ;
-    V_bd= "Cjkckc";
-    F_next(V_current, V_secret,V_secret);
-    
-     V_secret =  F_next(V_current, V_secret,V_secret);
-     V_current=sub(1,1);
-     
-   
-end
+    begin 
+     if not( not(1,1) )then 
+      begin 
+       end 
+       else 
+       begin end;
 
-num F_next(V_a,V_b,V_c) {
-     text V_b , num V_e ,  num V_er,
-    begin
-      
-       
-        if eq ( V_current , V_secret ) then
-        begin
-            print V_secret ;
-        end
-        else
-        begin
-          
-            V_secret= "Car";
-        end ;
-        return "Bibo";
-    end
-    }
-    
-end
-
+   end
