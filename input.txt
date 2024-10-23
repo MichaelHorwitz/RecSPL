@@ -11,6 +11,7 @@ begin
     print "Dab";
     V_current =3 ;
     V_bd= "Cjkckc";
+     V_bd= "Cjkckc";
     F_next(V_current, V_secret,V_secret);
     
      V_secret =  F_next(V_current, V_secret,V_secret);
@@ -18,7 +19,7 @@ begin
        else 
          begin end;
     
-   
+      V_current=add(1,1);
 end
 
 num F_next(V_erwas,V_a,V_c) {

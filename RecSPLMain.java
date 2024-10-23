@@ -14,7 +14,7 @@ public class RecSPLMain {
             boolean lex = lexer.readFile("input.txt"); // Replace with your input file
             if (lex) {  // Lexer didn't give any error
                 lexer.Tokenize();
-                System.out.println(boldGreen + " 1. Lexer has tokenized the input successfully. Check LexerOutput.txt");
+                System.out.println(  " 1. Lexer has tokenized the input successfully. Check LexerOutput.txt");
                 System.out.println();
 
                 // Syntax Analysis

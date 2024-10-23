@@ -550,7 +550,7 @@ private String typeCheckTerm(Node term) {
         } }
      else if(firstChild.NodeName.equals("BINOP")){
          if (firstChild.childNodes.size() == 3) {
-           return  typeCheckBinop(firstChild); // Handle binary operators
+           return  typeCheckBinopType(firstChild); // Handle binary operators
         }
     
 
@@ -560,6 +560,13 @@ private String typeCheckTerm(Node term) {
     return null;  // Return null for invalid terms
 }
  
+private String typeCheckBinops(Node binope){
+  
+     System.out.println("this who i enter with " + binope.NodeName);
+
+    System.out.println("aww banda");
+    return "u";
+}
 
 
 
