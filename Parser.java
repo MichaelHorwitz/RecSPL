@@ -682,7 +682,7 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
             String token = tokenList.get(0).name;
     
             // Check if it's an ATOMIC value
-            if (token.matches("V_[a-z]([a-z0-9])*") || token.matches("[0-9]+") || token.matches("\"[A-Za-z]+\"")) {
+            if (token.matches("V_[a-z]([a-z0-9])*") || token.matches("-?[0-9]+(\\.[0-9]+)?") || token.matches("\"[A-Z][a-z]{0,7}\"")) {
                 ATOMIC(pNode);  // Parse ATOMIC value
             } 
             // If it's not an ATOMIC, it must be an OP (either UNOP or BINOP)

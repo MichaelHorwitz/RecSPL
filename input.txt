@@ -1,44 +1,23 @@
 main
-    num V_secret ,
-    
-   
-   
-     num V_current ,
-    text V_bd,
-    
-     
+num V_x, num V_y, text V_message,
 begin
-    print "Dab";
-    V_current =3 ;
-    V_bd= "Cjkckc";
-     V_bd= "Cjkckc";
-    F_next(V_current, V_secret,V_secret);
-    
-     V_secret =  F_next(V_current, V_secret,V_secret);
-   if  mul(1,1) then begin end 
-       else 
-         begin end;
-    
-      V_current=add(1,1);
+   F_calculate(V_x, V_y, V_message);
 end
-
-num F_next(V_erwas,V_a,V_c) {
-     text V_b , num V_e ,  num V_er,
-    begin
-      
-       
-        if eq ( V_current , V_secret ) then
-        begin
-            print V_secret ;
-        end
-        else
-        begin
-          
-            V_secret= "Car";
-        end ;
-        return "Bibo";
-    end
-    }
-    
+num F_calculate(V_a, V_b, V_c)
+{
+   num V_temp, num V_result, text V_t,
+   begin
+       V_temp = 10;
+       return V_temp;
+   end
+}
+   num F_helper(V_p, V_q, V_r)
+   {
+       num V_temp, num V_x, text V_y,
+       begin
+           V_temp = 20;
+           return V_temp;
+       end
+   }
+   end
 end
-
