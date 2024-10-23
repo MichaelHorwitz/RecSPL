@@ -863,6 +863,7 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
         // Parse FNAME (function name)
         if (tokenList.size() > 0 && tokenList.get(0).name.matches("F_[a-z]([a-z0-9])*")) {
             Node fnameNode = new Node("FNAME");
+            fnameNode.id = id++;
             Node functionName = new Node(tokenList.remove(0).name);  // Consume FNAME
             fnameNode.childNodes.add(functionName);  // Add the function name as a child of FNAME
             headerNode.childNodes.add(fnameNode);    // Add FNAME as a child of HEADER
