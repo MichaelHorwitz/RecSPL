@@ -1,46 +1,30 @@
-main 
-
- num V_kai , text V_kadi,
-  begin 
-
-   skip; 
-    halt; 
-    print -9.03; 
-     V_kai = -12.03; 
-  
-   
-    
-   
-    if  grt(1,1) 
-    then 
-     begin 
-      end 
-      else 
-      begin 
-      end; 
- end
- num F_band(V_rt,V_tr, V_esd){
-
-   text V_bi , text V_trwa , num V_asz, 
-   begin 
-   print V_rt;
-   V_asz= F_badend(1,-12.5,1);
- 
-    end
-
-
+main
+num V_x, num V_y, num V_z,
+begin
+   F_parent1(V_x, V_y, V_z);
+end
+num F_parent1(V_a, V_b, V_c)
+{
+   num V_temp1, num V_temp2, text V_msg,
+   begin
+       return 0;
+   end
 }
-  num F_badend(V_b,V_tfr, V_esdd){
-
-   text V_bei , text V_trxwa , num V_ascz, 
-   begin 
-   print V_bei;
-  
-   V_bei="Ban";
-   
- 
-    end
-    
+   num F_child(V_d, V_e, V_f)
+   {
+       num V_val1, num V_val2, text V_txt,
+       begin
+           F_parent2(V_d, V_e, V_f);
+           return 0;
+       end
+   }
+   end
+end
+num F_parent2(V_g, V_h, V_i)
+{
+   num V_p1, num V_p2, text V_p3,
+   begin
+       return 0;
+   end
 }
- end
- end
+end
