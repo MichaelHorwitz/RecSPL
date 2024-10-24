@@ -68,7 +68,7 @@ F_badend
 (
 1
 ,
-V_bi
+-12.5
 ,
 1
 )
@@ -117,6 +117,9 @@ mul
 2
 )
 )
+;
+return
+V_trxwa
 ;
 end
 }

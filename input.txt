@@ -24,7 +24,7 @@ main
    text V_bi , text V_trwa , num V_asz, 
    begin 
    print V_rt;
-   V_asz= F_badend(1,V_bi,1);
+   V_asz= F_badend(1,-12.5,1);
  
     end
 
@@ -37,9 +37,10 @@ main
    print V_bei;
   
    V_ascz= add(add(1,1), mul(1,2)); 
+   return V_trxwa;
+
     end
-
-
+   
 }
  
  end

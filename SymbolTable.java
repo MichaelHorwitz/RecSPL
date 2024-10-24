@@ -545,9 +545,9 @@ private String typeCheckTerm(Node term) {
  
 private String typeCheckBinops(Node binope){
   
-     System.out.println("this who i enter with " + binope.NodeName);
+    // System.out.println("this who i enter with " + binope.NodeName);
 
-    System.out.println("aww banda");
+   // System.out.println("aww banda");
     return "u";
 }
 
@@ -999,9 +999,92 @@ public boolean typeCheckFunctions(Node root) {
 
 // This method checks a single function declaration.
 private boolean typeCheckDecl(Node decl) {
-   // System.out.println("i enter decl");
-    return typeCheckHeader(decl) && typeCheckBody(decl);
+    Node headerNode = decl.childNodes.get(0);  // Assuming HEADER is the first child of DECL
+    Node ftypNode = headerNode.childNodes.get(0);  // Get the FTYP node
+
+    return typeCheckHeader(decl) && typeCheckBody(decl, ftypNode);
 }
+private boolean validateReturnType(Node algoNode, Node ftypNode) {
+    boolean returnFound = false;  // Flag to indicate if we found a return statement
+
+    for (Node child : algoNode.childNodes) {
+        if (child.NodeName.equals("COMMAND")) {
+           // System.out.println("Entered COMMAND node");
+
+            for (Node commandChild : child.childNodes) {
+                // Check if the COMMAND contains a return statement
+                if (commandChild.NodeName.equals("return")) {
+                   // System.out.println("Found return statement");
+                    returnFound = true;  // Set the flag that return has been found
+                } else if (returnFound) {
+                    // If return was found, check the next node
+                    if (commandChild.NodeName.equals("CONST")) {
+                       // System.out.println("Found return value node: " + commandChild.NodeName);
+
+                        // Check if the CONST is a number
+                        if (!isNumericConst(commandChild)) {
+                            System.out.println("Error: Return value is not numeric.");
+                            return false;
+                        }
+                        
+                        // The return type is valid
+                        return true;  // Return type is valid, can exit early
+                    } else if (commandChild.NodeName.equals("VNAME")) {
+                     //   System.out.println("Found return value node: " + commandChild.NodeName);
+                        
+                        // Check if VNAME type is numeric
+                        if (!isNumericVName(commandChild)) {
+                            System.out.println("Error: Return value is not numeric.");
+                            return false;
+                        }
+
+                        // The return type is valid
+                        return true;  // Return type is valid, can exit early
+                    }
+                }
+            }
+        }
+
+        // Recursively check deeper in the tree if needed
+        if (!validateReturnType(child, ftypNode)) {
+            return false;
+        }
+    }
+    return true;  // Return true if all return statements match the expected return type
+}
+
+// Function to check if the CONST is a numeric value
+private boolean isNumericConst(Node constNode) {
+    String constValue = constNode.NodeName;  // Assuming NodeName holds the value of CONST
+    // Regex to match numeric values
+    return constValue.matches("-?[0-9]+(\\.[0-9]+)?");
+}
+
+// Function to check if the VNAME is numeric
+private boolean isNumericVName(Node vnameNode) {
+    if (vnameNode.childNodes.isEmpty()) {
+      //  System.out.println("Error: VNAME node has no child nodes.");
+        return false;  // No variable name to check
+    }
+
+    String variableName = vnameNode.childNodes.get(0).NodeName;  // Get the variable name
+   // System.out.println("Variable name: " + variableName);
+
+    VariableProps varProps = getVariableProps(variableName);  // Retrieve variable properties
+
+    if (varProps == null) {
+        System.out.println("Error: Variable " + variableName + " not found in symbol table.");
+        return false;  // Variable not found in the symbol table
+    }
+
+    //System.out.println("Variable: " + variableName + " Type: " + varProps.varType);
+
+    // Check if varProps is not null and is of type numeric
+    return varProps.varType.equals("num");  // Assuming 'n' indicates numeric type
+}
+
+
+
 
 // This method checks the function header.
 private boolean typeCheckHeader(Node decl) {
@@ -1065,7 +1148,7 @@ private boolean validateFTypeAndFname(Node ftyp, Node fname) {
     // Get the function name and type
     String functionName = fname.NodeName;
     String functionType = ftyp.NodeName;
-
+  //("function name : "+ functionName + "and return type:"+ functionType);
     // Retrieve the function properties from the symbol table (assuming this method exists)
     VariableProps varProps = getVariableProps(functionName);
     
@@ -1212,7 +1295,7 @@ private Node findSubFuncsNode(Node node) {
 
 // Type check sub-functions inside SUBFUNCS
 private boolean typeCheckSubFunctions(Node subFuncsNode) {
-    System.out.println("Checking sub-functions...");
+    //System.out.println("Checking sub-functions...");
     for (Node function : subFuncsNode.childNodes) {
         if (!typeCheckFunctions(function)) {
             return false;  // Return false if any sub-function fails to type-check
@@ -1222,14 +1305,15 @@ private boolean typeCheckSubFunctions(Node subFuncsNode) {
 }
 
 // Main function to type-check BODY node, including ALGO and SUBFUNCS
-private boolean typeCheckBody(Node body) {
+private boolean typeCheckBody(Node body, Node ftypNode) {
     Node algoNode = findAlgoNode(body);  // Get the ALGO node from BODY
     Node subFuncsNode = findSubFuncsNode(body);  // Get the SUBFUNCS node from BODY
 
     if (algoNode != null) {
         return typeCheckProlog(body)
             && typeCheckLocVars(body)
-            && typeCheckAlgo(algoNode)  // Pass the correct ALGO node to typeCheckAlgo
+            && typeCheckAlgo(algoNode)
+            && validateReturnType(algoNode, ftypNode)  // Validate the return type
             && typeCheckEpilog(body)
             && (subFuncsNode == null || typeCheckSubFunctions(subFuncsNode));  // Check SUBFUNCS if present
     } else {
@@ -1237,6 +1321,7 @@ private boolean typeCheckBody(Node body) {
         return false;  // Return false if ALGO is missing
     }
 }
+
 
 // Simulated method to get type of a given variable/type.
 
