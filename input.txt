@@ -24,13 +24,13 @@ main
    text V_bi , text V_trwa , num V_asz, 
    begin 
    print V_rt;
-  
+   V_asz= F_badend(1,V_bi,1);
  
     end
 
 
 }end
-  num F_badend(V_rrt,V_tfr, V_esdd){
+  num F_badend(V_b,V_tfr, V_esdd){
 
    text V_bei , text V_trxwa , num V_ascz, 
    begin 

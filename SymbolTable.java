@@ -429,60 +429,46 @@ private boolean typeCheckCommand(Node command) {
 return true;
 }
 private boolean typeCheckAssign(Node assignNode) {
-    // Ensure the node is indeed an ASSIGN type
     if (!assignNode.NodeName.equals("ASSIGN")) {
-       // System.out.println("Error: Expected ASSIGN node but found: " + assignNode.NodeName);
         return false;
     }
 
-    // Ensure the ASSIGN node has the expected structure
-    if (assignNode.childNodes.size() < 3) { // Should have at least [VNAME, '=', TERM]
+    if (assignNode.childNodes.size() < 3) {
         System.out.println("Error: Assign command does not have enough components.");
         return false;
     }
 
-    // Create nodes for VNAME and TERM
-    Node vnameNode = assignNode.childNodes.get(0); // First child should be VNAME
-    Node operatorNode = assignNode.childNodes.get(1); // Second child should be '='
-    Node termNode = assignNode.childNodes.get(2); // Third child should be TERM
+    Node vnameNode = assignNode.childNodes.get(0); 
+    Node termNode = assignNode.childNodes.get(2); 
 
-    // Validate the variable name
-    if (!vnameNode.NodeName.equals("VNAME")) {
-       // System.out.println("Error: Expected VNAME in assignment but found: " + vnameNode.NodeName);
-        return false;
-    }
-
-    // Check if the variable exists in the symbol table
     VariableProps varProps = getVariableProps(vnameNode.childNodes.get(0).NodeName);
     if (varProps == null) {
-      //  System.out.println("Error: Variable not found in symbol table: " + vnameNode.childNodes.get(0).NodeName);
+        System.out.println("Error: Variable not found in symbol table: " + vnameNode.childNodes.get(0).NodeName);
         return false;
     }
 
-    // Get the variable type from the symbol table
-    String varType = varProps.varType; // This should be 'n' or 'text', for example
+    String varType = varProps.varType; 
+    String termType = typeCheckTerm(termNode);
 
-    // Type check the TERM and ensure it matches the variable type
-    String termType = typeCheckTerm(termNode); // Implement this function to get the type of the term
     if (termType == null) {
-        return false; // If term type is not valid
+        return false;
     }
 
-   // System.out.println("Assigning " + varType + " to " + termType);
-
-    // Check if the variable type is numeric and matches the input
-    if (varType.equals("n") && !isNumeric(termNode)) {
-        System.out.println("Error: Cannot assign non-numeric value to numeric variable.");
-        return false; // If VNAME is numeric, TERM must be numeric
+    // If term is a function call, ensure argument types match
+    if (termNode.NodeName.equals("CALL")) {
+        String callType = typecheckCallTerm(termNode); // Check function call types
+        if (!callType.equals(varType)) {
+            System.out.println("Error: Type mismatch. Cannot assign " + callType + " to " + varType);
+            return false;
+        }
     }
 
-    // Check if the variable type matches the term type
     if (!varType.equals(termType)) {
         System.out.println("Error: Type mismatch. Cannot assign " + termType + " to " + varType);
-        return false; // The types must match
+        return false;
     }
-          //  System.out.println("assigned properly");
-    return true; // The assignment is valid
+
+    return true;
 }
 
 // Helper method to check if TERM is numeric
@@ -607,20 +593,59 @@ private String getNodeType(Node node) {
         return typeCheckAtomics(node);
     }
 }
- private String typecheckCallTerm(Node callNode){
 
+private String typecheckCallTerm(Node callNode) {
+    String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName; // Get function name
+    String argument1 = callNode.childNodes.get(1).childNodes.get(0).NodeName;   // First argument
+    String argument2 = callNode.childNodes.get(2).childNodes.get(0).NodeName;   // Second argument
+    String argument3 = callNode.childNodes.get(3).childNodes.get(0).NodeName;   // Third argument
 
-    String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName; 
-   // System.out.println("function name: " + functionName);
+    // Get function properties (like return type) from the symbol table
     VariableProps functionProps = getVariableProps(functionName);
-    if (functionProps != null) {
-      
-       return functionProps.varType ; // Check if the function's return type is numeric
-    } 
-   return "unknown type";
+    if (functionProps == null) {
+        System.out.println("Error: Function not found in symbol table: " + functionName);
+        return "unknown type";
+    }
 
+    // Get expected argument types for the function (assuming numeric types for simplicity)
+    // This could be based on how you define the function in your symbol table
+    String expectedArgType = "n"; // Assume function expects numeric arguments
 
+    // Check each argument's type
+    if (!isNumeric(argument1)) {
+        System.out.println("Error: Argument 1 "+argument1+" is not numeric in function call to " + functionName);
+        return "mismatch";
+    }
+    if (!isNumeric(argument2)) {
+        System.out.println("Error: Argument 2 is not numeric in function call to " + functionName);
+        return "mismatch";
+    }
+    if (!isNumeric(argument3)) {
+        System.out.println("Error: Argument 3 is not numeric in function call to " + functionName);
+        return "mismatch";
+    }
+
+    // If all arguments are valid, return the function's return type
+    return functionProps.varType; // This should be the return type of the function
 }
+
+// Helper method to check if an argument is numeric based on its name
+private boolean isNumeric(String argumentName) {
+    // Check if the argument is a number using regex
+    if (argumentName.matches("-?[0-9]+(\\.[0-9]+)?")) {
+        return true; // The argument is a number (integer or decimal)
+    }
+
+    // If not a constant, check if it's a numeric variable
+    VariableProps varProps = getVariableProps(argumentName);
+    if (varProps != null && varProps.varType.equals("num")) {
+        return true; // The argument is a variable of numeric type
+    }
+
+    return false; // The argument is neither a number nor a numeric variable
+}
+
+
 
 private String typeCheckOp(Node opNode) {
     // Ensure the node has enough children (UNOP and ARG)
