@@ -1,0 +1,2 @@
+ID: 0, Old Name: V_secret, Translated Name: v0, Type: num
+ID: 1, Old Name: V_current, Translated Name: v1, Type: num

@@ -2,6 +2,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.ArrayList;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 
 public class SymbolTable {
@@ -1639,7 +1642,17 @@ private String getChildValue(Node node) {
             System.out.println("ID: " + key + ", Old Name: " + varProps.oldName + ", Translated Name: " + varProps.translatedName + ", Type: " + varProps.varType);
         }
     }
-
+    public void printTableToFile(String filename) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            for (Integer key : table.keySet()) {
+                VariableProps varProps = table.get(key);
+                writer.write("ID: " + key + ", Old Name: " + varProps.oldName + ", Translated Name: " + varProps.translatedName + ", Type: " + varProps.varType);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("An error occurred while writing to the file: " + e.getMessage());
+        }
+    }
    public  HashMap<Integer, VariableProps> getmap(){
 
         return this.table;

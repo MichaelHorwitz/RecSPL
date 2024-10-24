@@ -538,6 +538,7 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
     
             // Check if it's a valid VNAME (variable name)
             if (token.matches("V_[a-z]([a-z0-9])*")) {
+                pNode.id = id++;
                 VNAME(pNode);  // Parse the VNAME
             } 
             // If it's not a VNAME, treat it as a CONST

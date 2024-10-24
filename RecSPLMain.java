@@ -40,7 +40,15 @@ public class RecSPLMain {
                 SymbolTable symbolTable = new SymbolTable();
             symbolTable.generateFromTree(parser.headNode);
                symbolTable.printTable();
-               
+               symbolTable.printTableToFile("symbolTable.txt");
+            ICG icg = new ICG(symbolTable, parser.headNode);
+            var outPut = icg.doTranslate();
+            try (FileWriter icgWriter = new FileWriter("icgOutput.txt")) {
+                icgWriter.write(outPut.toString());
+                System.out.println(boldPurple + "ICG output has been written to icgOutput.txt");
+            } catch (IOException e) {
+                System.out.println("An error occurred while writing ICG output to file: " + e.getMessage());
+            }
              //  SymbolTable2 TC = new SymbolTable2(parser.headNode);
                // TC.addSymbols();
             } else {
@@ -49,6 +57,7 @@ public class RecSPLMain {
         } catch (IOException e) {
             System.out.println("An error occurred while reading the input file: " + e.getMessage());
         } catch (Exception e) {
+            e.printStackTrace();
             System.out.println("An error occurred: " + e.getMessage());
         }
     }

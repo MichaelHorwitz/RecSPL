@@ -1,0 +1,4 @@
+PRINT "Secret"
+INPUT v0
+REM END 
+STOP
