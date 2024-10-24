@@ -734,13 +734,15 @@ private String typeCheckBinopType(Node binopNode) {
         System.out.println("Error: BINOP node has no operator.");
         return "u";  // Undefined
     }
-
+   
     // Get the operator from the first child
     String binopName = binopNode.childNodes.get(0).NodeName;
+    System.out.println("what im returning" + binopName);
    // System.out.println("BINOP operator: " + binopName);
 
     // Check if BINOP is boolean
     if (binopName.equals("or") || binopName.equals("and")) {
+       
         return "bool";  // Boolean type
     }
     // Check if BINOP is a comparison operator
@@ -861,81 +863,95 @@ private String typeCheckCond(Node condNode) {
     }
 }
 private String typeCheckSimple(Node simpleNode) {
-    // SIMPLE is of the form BINOP( ATOMIC1, ATOMIC2 )
+    // SIMPLE must have at least a BINOP.
     if (simpleNode.childNodes.size() < 1) {
         System.out.println("Error: SIMPLE must have at least a BINOP.");
         return "u";  // Undefined
     }
 
-    // Get the BINOP node
     Node binopNode = simpleNode.childNodes.get(0);
     String binopType = typeCheckBinopType(binopNode);  // Get the type of the BINOP
 
-    // Check that there are two ATOMIC children
     if (binopNode.childNodes.size() < 2) {
         System.out.println("Error: BINOP must have two ATOMICs.");
         return "u";  // Undefined
     }
 
-    // Get the atomic children
     String atomic1Type = typeCheckAtomics(binopNode.childNodes.get(1));  // ATOMIC1
     String atomic2Type = typeCheckAtomics(binopNode.childNodes.get(2));  // ATOMIC2
-     // System.out.println("binop type"+binopType);
-    // Handle boolean BINOP (e.g., and, or) with boolean ATOMICs
+
+    // Logical operations
     if (binopType.equals("bool") && atomic1Type.equals("bool") && atomic2Type.equals("bool")) {
-        return "bool";  // Boolean result
+        return "bool";  // Valid logical operation
     }
-    // Handle comparison BINOP (e.g., eq, grt) with numeric ATOMICs
+    // Comparison operations
     else if (binopType.equals("c") && atomic1Type.equals("num") && atomic2Type.equals("num")) {
-        return "bool"; }
-        else if (binopType.equals("num") && atomic1Type.equals("num") && atomic2Type.equals("num")) {
-            return "bool"; }
-   else {
+        return "bool";  // Valid comparison operation
+    }
+    // Numeric operations (if applicable)
+    else if (binopType.equals("num") && atomic1Type.equals("num") && atomic2Type.equals("num")) {
+        return "num";  // Valid numeric operation
+    } else {
         System.out.println("Error: Invalid types in SIMPLE. BINOP: " + binopType + ", ATOMIC1: " + atomic1Type + ", ATOMIC2: " + atomic2Type);
         return "u";  // Undefined
     }
 }
 
 private String typeCheckComposit(Node compositNode) {
-   // System.out.println("entering composit");
-    // COMPOSIT ::= BINOP(SIMPLE1, SIMPLE2) or UNOP(SIMPLE)
-    if (compositNode.NodeName.equals("BINOP")) {
-        // COMPOSIT is of the form BINOP(SIMPLE1, SIMPLE2)
-        if (compositNode.childNodes.size() < 3) {
-            System.out.println("Error: COMPOSIT BINOP must have two SIMPLEs.");
+    if (compositNode.NodeName.equals("COMPOSIT")) {
+        System.out.println("Inside COMPOSIT: " + compositNode.NodeName);
+        
+        // Ensure COMPOSIT has exactly two SIMPLE nodes
+        if (compositNode.childNodes.size() != 2) {
+            System.out.println("Error: COMPOSIT must have exactly two SIMPLE nodes.");
             return "u";  // Undefined
         }
 
-        // Get the binopNode and ensure it has the right structure
-        String binopType = typeCheckBinopType(compositNode.childNodes.get(0));  // BINOP
-        String simple1Type = typeCheckSimple(compositNode.childNodes.get(1));  // SIMPLE1
-        String simple2Type = typeCheckSimple(compositNode.childNodes.get(2));  // SIMPLE2
+        Node simple1Node = compositNode.childNodes.get(0);
+        Node simple2Node = compositNode.childNodes.get(1);
 
-        // Boolean BINOP with boolean SIMPLEs
-        if (binopType.equals("bool") && simple1Type.equals("bool") && simple2Type.equals("bool")) {
-            return "bool";  // Boolean result
+        String simple1Type = typeCheckSimple(simple1Node);  // Check type of SIMPLE1
+        String simple2Type = typeCheckSimple(simple2Node);  // Check type of SIMPLE2
+
+        // Check the types of the SIMPLE nodes against the type of the first BINOP
+        String binopType1 = typeCheckBinopType(simple1Node.childNodes.get(0));
+        String binopType2 = typeCheckBinopType(simple2Node.childNodes.get(0));
+
+        // Adjusted composite type check
+        if (binopType1.equals("bool") && simple1Type.equals("bool") && simple2Type.equals("bool")) {
+            return "bool";  // Valid logical operation
+        } else if (binopType1.equals("c") && simple1Type.equals("bool") && simple2Type.equals("bool")) {
+            return "bool";  // Comparison returns a boolean
         } else {
-            System.out.println("Error: Invalid types in COMPOSIT. BINOP: " + binopType + ", SIMPLE1: " + simple1Type + ", SIMPLE2: " + simple2Type);
+            System.out.println("Error: Invalid types in COMPOSIT. SIMPLE1: " + simple1Type + ", SIMPLE2: " + simple2Type);
             return "u";  // Undefined
         }
-    } else if (compositNode.NodeName.equals("UNOP")) {
-        // COMPOSIT is of the form UNOP(SIMPLE)
-        if (compositNode.childNodes.size() < 2) {
-            System.out.println("Error: COMPOSIT UNOP must have a SIMPLE.");
-            return "u";  // Undefined
-        }
+    } 
+        // UNOP type checking remains as is
 
-        String unopType = typeCheckUnopType(compositNode.childNodes.get(0));  // UNOP
-        String simpleType = typeCheckSimple(compositNode.childNodes.get(1));  // SIMPLE
-
-        // Boolean UNOP with boolean SIMPLE
-        if (unopType.equals("bool") && simpleType.equals("bool")) {
-            return "bool";  // Boolean result
-        } else {
-            System.out.println("Error: Invalid types in COMPOSIT UNOP. UNOP: " + unopType + ", SIMPLE: " + simpleType);
-            return "u";  // Undefined
-        }
-    } else {
+        else if (compositNode.NodeName.equals("UNOP")) {
+            // Check for UNOP structure
+            if (compositNode.childNodes.size() != 1) {
+                System.out.println("Error: COMPOSIT UNOP must have exactly one SIMPLE.");
+                return "u";  // Undefined
+            }
+    
+            // Get the SIMPLE node
+            Node simpleNode = compositNode.childNodes.get(0);
+            String unopType = typeCheckUnopType(compositNode.childNodes.get(0));  // Get type from UNOP
+            String simpleType = typeCheckSimple(simpleNode);  // Check type of SIMPLE
+    
+            // Validate UNOP type
+            if (unopType.equals("bool") && simpleType.equals("bool")) {
+                return "bool";  // Valid UNOP returns a boolean
+            } else {
+                System.out.println("Error: Invalid types in COMPOSIT UNOP. UNOP: " + unopType + ", SIMPLE: " + simpleType);
+                return "u";  // Undefined
+            }
+    
+        } 
+        
+    else {
         System.out.println("Error: Invalid COMPOSIT type: " + compositNode.NodeName);
         return "u";  // Undefined
     }
