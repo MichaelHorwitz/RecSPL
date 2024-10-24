@@ -9,9 +9,9 @@ main
      V_kai = -12.03; 
   
    
-    V_kai= sqrt(1); 
+    
    
-    if or( eq(1,1) , grt(1,1))
+    if  grt(1,1) 
     then 
      begin 
       end 
@@ -36,11 +36,11 @@ main
    begin 
    print V_bei;
   
-   V_ascz= add(add(1,1), mul(1,2)); 
+   V_bei="Ban";
    
-
+ 
     end
-   
+    
 }
  end
  end

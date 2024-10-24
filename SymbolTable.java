@@ -686,11 +686,14 @@ private String typeCheckUnop(Node unopNode) {
 
 // Type checking for ARG (which can be either an ATOMIC or another OP)
 private String typeCheckArg(Node argNode) {
-    if (argNode.NodeName.equals("ATOMIC")||argNode.NodeName.equals("CONST")) {
+    System.out.println("got this ar" +argNode.NodeName );
+    if (argNode.NodeName.equals("ATOMIC")||argNode.NodeName.equals("CONST")||argNode.NodeName.equals("VNAME")) {
         return typeCheckAtomics(argNode);  // Check type of atomic values
     } else if (argNode.NodeName.equals("OP")) {
         return typeCheckOp(argNode);  // Recursively check the type of nested operations
-    } else {
+    } 
+    
+    else {
         System.out.println("Error: Invalid ARG: " + argNode.NodeName);
         return "u";  // Undefined if not recognized
     }
@@ -737,7 +740,7 @@ private String typeCheckBinopType(Node binopNode) {
    
     // Get the operator from the first child
     String binopName = binopNode.childNodes.get(0).NodeName;
-    System.out.println("what im returning" + binopName);
+   // System.out.println("what im returning" + binopName);
    // System.out.println("BINOP operator: " + binopName);
 
     // Check if BINOP is boolean
@@ -768,43 +771,41 @@ private String typeCheckBinopType(Node binopNode) {
 
 
 private String typeCheckAtomics(Node atomic) {
-   // System.out.println("atomic node: " + atomic.NodeName);  // Directly log the atomic node name
-
-    if (atomic.NodeName.startsWith("V_")) {  // Assuming variable names start with "V_"
-        // Lookup the variable in the symbol table by its name (which is atomic.NodeName)
-        VariableProps varProps = getVariableProps(atomic.NodeName);  // Use the atomic node name directly
-        
-        if (varProps == null) {
-            System.out.println("Error: Variable not found in symbol table: " + atomic.NodeName);
-            return "u";  // Undefined if variable not found
+    // Assuming atomic node represents either a variable or a constant.
+    if (atomic.NodeName.equals("VNAME")) {  // Check if the node is a variable (VNAME)
+        String varName = atomic.childNodes.get(0).NodeName;  // Extract the variable name
+        if (varName.startsWith("V_")) {  // Assuming variable names start with "V_"
+            VariableProps varProps = getVariableProps(varName);  // Lookup in the symbol table
+            if (varProps == null) {
+                System.out.println("Error: Variable not found in symbol table: " + varName);
+                return "u";  // Return undefined if variable not found
+            }
+            return varProps.varType;  // Return the type of the variable
+        } else {
+            System.out.println("Error: Invalid variable name format: " + varName);
+            return "u";  // Invalid variable name format
         }
-        // Return the type of the variable (e.g., "num", "text")
-       // System.out.println("Returning variable type: " + varProps.varType);
-        return varProps.varType;  
-    } else if (atomic.NodeName.equals("CONST")) {
-        // Determine if the constant is a number or text
-        String constValue = atomic.childNodes.get(0).NodeName;  // Assuming the value is stored in the first child node
-       
+    } 
+    else if (atomic.NodeName.equals("CONST")) {  // Check if the node is a constant (CONST)
+        String constValue = atomic.childNodes.get(0).NodeName;  // Extract the constant value
         // Check if it's a numeric constant
         if (constValue.matches("-?[0-9]+(\\.[0-9]+)?")) {
-           // System.out.print( "const value ha this "+constValue);
-          //  System.out.println("im returning correctly");
-        
-            return "num";  // Numeric constant
+            return "num";  // Return "num" for numeric constant
         }
-        // Check if it's a text constant
-        else if (constValue.matches("\"[A-Z][a-z]{0,7}\"")) {
-            return "text";  // Text constant
+        // Check if it's a valid text constant (assuming format "Text")
+        else if (constValue.matches("\"[A-Za-z]{1,8}\"")) {
+            return "text";  // Return "text" for text constant
         } else {
             System.out.println("Error: Invalid constant value: " + constValue);
-            return "u";  // Undefined if constant is neither a valid number nor valid text
+            return "u";  // Return undefined for invalid constant format
         }
+    } else {
+        System.out.println("Error: Unexpected node type: " + atomic.NodeName);
+        return "u";  // Return undefined for unexpected node types
     }
-    
-    // If it's neither a VNAME nor CONST, it's invalid
-    System.out.println("Error: Invalid atomic value: " + atomic.NodeName);
-    return "u";  // Undefined if the atomic node type is not recognized
 }
+
+   
 
 
 
@@ -1291,27 +1292,29 @@ private boolean typeCheckEpilog(Node epilog) {
 
 // Helper method to find the SUBFUNCS node inside BODY, DECL, or FUNCTIONS
 private Node findSubFuncsNode(Node node) {
-    // Check if the node itself is SUBFUNCS
+   // System.out.println("finding subfuncts: " + node.NodeName);
+
+    // Check if the current node is SUBFUNCS
     if (node.NodeName.equals("SUBFUNCS")) {
+       // System.out.println("found it");
         return node;
     }
-    
-    // Traverse through the child nodes to find SUBFUNCS
+
+    // Traverse all child nodes recursively
     for (Node child : node.childNodes) {
-        // Recursively search within FUNCTION or DECL nodes
-        if (child.NodeName.equals("BODY") || child.NodeName.equals("FUNCTIONS") || child.NodeName.equals("DECL")) {
-            Node foundSubFuncs = findSubFuncsNode(child);  // Recursive search
-            if (foundSubFuncs != null) {
-                return foundSubFuncs;  // Return the SUBFUNCS if found
-            }
+        Node foundSubFuncs = findSubFuncsNode(child);  // Recursive search in all children
+        if (foundSubFuncs != null) {
+            return foundSubFuncs;  // Return the SUBFUNCS if found
         }
     }
-    return null;  // Return null if no SUBFUNCS is found
+
+    return null;  // Return null if SUBFUNCS is not found
 }
+
 
 // Type check sub-functions inside SUBFUNCS
 private boolean typeCheckSubFunctions(Node subFuncsNode) {
-    //System.out.println("Checking sub-functions...");
+   // System.out.println("Checking sub-functions...");
     for (Node function : subFuncsNode.childNodes) {
         if (!typeCheckFunctions(function)) {
             return false;  // Return false if any sub-function fails to type-check
