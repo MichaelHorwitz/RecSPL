@@ -63,20 +63,22 @@ public static final String YELLOW = "\033[0;33m";
         funcCalls = new ArrayList<>();
         currScope = 0;
         recFunCheck(currNode, currScope);
-        boolean valid = true;
         for (Pair call : funcCalls) {
             boolean match = false;
             for (Pair def : funcDefs) {
                 if (call.name.equals(def.name)) {
-                    if(call.scope <= def.scope){
+                    if(call.scope == def.scope || call.scope == def.scope + 1){
+                        // System.out.println(call.name);
+                        // System.out.println(call.scope);
+                        // System.out.println(def.scope);
+                    
                         match = true;
-                    } else {
-                        valid = false;
-                        System.out.println("Invalid function call: " + call.name);
-                        
-                        break;
                     }
                 }
+            }
+            if (!match) {
+                System.out.println("Invalid function call: " + call.name);
+                
             }
         }
     }
@@ -107,6 +109,9 @@ public static final String YELLOW = "\033[0;33m";
         if (currNode == null) {
             return;
         }
+        else if (currNode.NodeName.equals("EPILOG")){
+            stackOfTables.pop();
+        }
         else if (currNode.NodeName.equals("CALL")){
            // var fName = currNode.childNodes.getFirst().childNodes.getFirst().NodeName;
            // if (!checkAlreadyInTable(fName, table)){
@@ -123,10 +128,11 @@ public static final String YELLOW = "\033[0;33m";
                 else if (node.NodeName.equals("VNAME")) {
                     VariableProps newVar = new VariableProps();
                     String varName = node.childNodes.get(0).NodeName;
-                    if (checkAlreadyInTable(varName, table)) {
+                    if (checkAlreadyInTable(varName, currTable)) {
                         System.out.println("Variable already declared: " + varName);
                         return;
                     }
+
                     newVar.oldName = varName;
                     newVar.translatedName = "v" + node.id;
                     newVar.varType = lastType;
