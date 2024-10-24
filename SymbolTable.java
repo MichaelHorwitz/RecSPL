@@ -325,21 +325,18 @@ private boolean typeCheckGLOVARS1(Node globVarsNode) {
 
 
 private boolean typeCheckAlgo(Node algo) {
-
-      // Loop through the children of PROG
-      for (Node child : algo.childNodes) {
+    // Ensure we are actually working with the ALGO node
+    for (Node child : algo.childNodes) {
         if (child.NodeName.equals("INSTRUC")) {
-            // Type check each GLOBVARS node
+            // Type check each instruction node inside ALGO
             if (!typeCheckInstruc1(child)) {
-                return false; // Return false if any GLOBVARS fails
+                return false; // Return false if any INSTRUC fails
             }
         }
     }
-       
-    return true;
-   
-    // return typeCheckInstruc1(algo);
+    return true; // If all checks pass
 }
+
 
 // Type check instructions
 private boolean typeCheckInstruc1(Node instruc) {
@@ -572,8 +569,8 @@ private String typeCheckBinops(Node binope){
 
 
 private boolean typeCheckCall(Node callNode) {
-   // System.out.println("inside call function");
-    
+   // System.out.println("i enter the call");
+
     // Check if the call node has at least 4 children: function name + 3 parameters
     if (callNode.childNodes.size() < 4) {
         System.out.println("Error: CALL must have a function name and three parameters.");
@@ -581,41 +578,36 @@ private boolean typeCheckCall(Node callNode) {
     }
 
     // Get the function name
-    String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName; 
-   // System.out.println("function name: " + functionName);
-
+    String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName;
+   
     // Traverse into the ATOMIC nodes
-    String type1 = typeCheckAtomics(callNode.childNodes.get(1).childNodes.get(0)); // First parameter's atomic value
-    String type2 = typeCheckAtomics(callNode.childNodes.get(2).childNodes.get(0)); // Second parameter's atomic value
-    String type3 = typeCheckAtomics(callNode.childNodes.get(3).childNodes.get(0)); // Third parameter's atomic value
+    String type1 = getNodeType(callNode.childNodes.get(1).childNodes.get(0)); // First parameter's type
+    String type2 = getNodeType(callNode.childNodes.get(2).childNodes.get(0)); // Second parameter's type
+    String type3 = getNodeType(callNode.childNodes.get(3).childNodes.get(0)); // Third parameter's type
+
+   // System.out.println("what I'm carrying: " + callNode.childNodes.get(3).childNodes.get(0));
 
     // Check if all three parameters are numeric
     if ("num".equals(type1) && "num".equals(type2) && "num".equals(type3)) {
-         
         VariableProps functionProps = getVariableProps(functionName);
-       // System.out.println("need to get this functions return type"+ functionName);
-
-        return true;
-    }
-        // Check the symbol table for the function type
-       // VariableProps functionProps = getVariableProps(functionName);
-        //if (functionProps != null) {
-           // return true;
-           // return functionProps.varType.equals("num");  // Check if the function's return type is numeric
-        //} 
-        
-        //else  {
-           // System.out.print("function name"+ functionName);
-           // System.out.println("Error: Function not found in symbol table: " + functionName);
-           // return false;  // Function not found
-        //}
-      
-    else {
+        return true;  // Return true if all parameters are valid
+    } else {
         System.out.println("Error: Parameters must all be numeric. Received: " + type1 + ", " + type2 + ", " + type3);
         return false;  // Parameters do not match expected types
     }
-   
-} private String typecheckCallTerm(Node callNode){
+}
+
+// Helper function to determine the node type, checks if it's a numeric or valid atomic, otherwise calls typeCheckAtomics
+private String getNodeType(Node node) {
+    // If the node is already a known numeric constant or valid type, return "num"
+    if (node.NodeName.matches("-?[0-9]+(\\.[0-9]+)?")) {  // Assuming numeric constants are represented as digits
+        return "num";
+    } else {
+        // Otherwise, pass it through typeCheckAtomics to determine its type
+        return typeCheckAtomics(node);
+    }
+}
+ private String typecheckCallTerm(Node callNode){
 
 
     String functionName = callNode.childNodes.get(0).childNodes.get(0).NodeName; 
@@ -765,11 +757,12 @@ private String typeCheckAtomics(Node atomic) {
     } else if (atomic.NodeName.equals("CONST")) {
         // Determine if the constant is a number or text
         String constValue = atomic.childNodes.get(0).NodeName;  // Assuming the value is stored in the first child node
-        
+       
         // Check if it's a numeric constant
         if (constValue.matches("-?[0-9]+(\\.[0-9]+)?")) {
            // System.out.print( "const value ha this "+constValue);
           //  System.out.println("im returning correctly");
+        
             return "num";  // Numeric constant
         }
         // Check if it's a text constant
@@ -1070,14 +1063,29 @@ private boolean validateFTypeAndFname(Node ftyp, Node fname) {
 
 
 // This method checks the function body.
-private boolean typeCheckBody(Node body) {
-   //  System.out.println("type checking body");
-    return typeCheckProlog(body)
-        && typeCheckLocVars(body)
-        && typeCheckAlgo(body)
-        && typeCheckEpilog(body)
-        && typeCheckSubFunctions(body);
+
+
+// Helper method to find the ALGO node in BODY
+// Helper method to recursively find the ALGO node in BODY
+
+
+
+// Helper method to recursively find the ALGO node in BODY
+private Node findAlgoNode(Node body) {
+    for (Node child : body.childNodes) {
+        if (child.NodeName.equals("ALGO")) {
+            return child;  // Return the ALGO node if found
+        } else {
+            // Recursively search in the children of this node
+            Node algoNode = findAlgoNode(child);
+            if (algoNode != null) {
+                return algoNode;  // Return if found deeper in the tree
+            }
+        }
+    }
+    return null;  // Return null if ALGO is not found
 }
+
 
 // Check prolog, always returns true as per base case.
 private boolean typeCheckProlog(Node prolog) {
@@ -1151,11 +1159,58 @@ private boolean typeCheckEpilog(Node epilog) {
    // System.out.println("entering epilog");
     return true; // Base case
 }
+// Helper method to find the SUBFUNCS node in BODY
+// Helper method to find the SUBFUNCS node in BODY
+// Helper method to find the SUBFUNCS node inside BODY
+// Helper method to find the SUBFUNCS node inside BODY
+// Find the ALGO node within BODY
 
-// Check sub-functions.
-private boolean typeCheckSubFunctions(Node subFunctions) {
-   // System.out.println("leaving subfunctions");
-    return typeCheckFunctions(subFunctions);
+// Helper method to find the SUBFUNCS node inside BODY, DECL, or FUNCTIONS
+private Node findSubFuncsNode(Node node) {
+    // Check if the node itself is SUBFUNCS
+    if (node.NodeName.equals("SUBFUNCS")) {
+        return node;
+    }
+    
+    // Traverse through the child nodes to find SUBFUNCS
+    for (Node child : node.childNodes) {
+        // Recursively search within FUNCTION or DECL nodes
+        if (child.NodeName.equals("BODY") || child.NodeName.equals("FUNCTIONS") || child.NodeName.equals("DECL")) {
+            Node foundSubFuncs = findSubFuncsNode(child);  // Recursive search
+            if (foundSubFuncs != null) {
+                return foundSubFuncs;  // Return the SUBFUNCS if found
+            }
+        }
+    }
+    return null;  // Return null if no SUBFUNCS is found
+}
+
+// Type check sub-functions inside SUBFUNCS
+private boolean typeCheckSubFunctions(Node subFuncsNode) {
+    System.out.println("Checking sub-functions...");
+    for (Node function : subFuncsNode.childNodes) {
+        if (!typeCheckFunctions(function)) {
+            return false;  // Return false if any sub-function fails to type-check
+        }
+    }
+    return true;  // All sub-functions passed the type-check
+}
+
+// Main function to type-check BODY node, including ALGO and SUBFUNCS
+private boolean typeCheckBody(Node body) {
+    Node algoNode = findAlgoNode(body);  // Get the ALGO node from BODY
+    Node subFuncsNode = findSubFuncsNode(body);  // Get the SUBFUNCS node from BODY
+
+    if (algoNode != null) {
+        return typeCheckProlog(body)
+            && typeCheckLocVars(body)
+            && typeCheckAlgo(algoNode)  // Pass the correct ALGO node to typeCheckAlgo
+            && typeCheckEpilog(body)
+            && (subFuncsNode == null || typeCheckSubFunctions(subFuncsNode));  // Check SUBFUNCS if present
+    } else {
+        System.out.println("Error: ALGO node not found in BODY.");
+        return false;  // Return false if ALGO is missing
+    }
 }
 
 // Simulated method to get type of a given variable/type.

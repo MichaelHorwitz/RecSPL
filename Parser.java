@@ -551,8 +551,8 @@ public void printParseTree(Node head,FileWriter writer) throws IOException{
         if (tokenList.size() > 0) {
             String token = tokenList.get(0).name;
     
-            // Check if it's a valid ATOMIC value
-            if (token.matches("V_[a-z]([a-z0-9])*") || token.matches("[0-9]+") || token.matches("\"[A-Za-z]+\"")) {
+            // Check if it's a valid ATOMIC value"
+            if (token.matches("V_[a-z]([a-z0-9])*") || token.matches("-?[0-9]+(\\.[0-9]+)?") || token.matches("\"[A-Z][a-z]{0,7}\"")) {
                 ATOMIC(pNode);  // Parse ATOMIC value
             } 
             // Check if it's a function call (CALL)

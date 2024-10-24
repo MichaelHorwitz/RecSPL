@@ -1,23 +1,45 @@
-main
-num V_x, num V_y, text V_message,
-begin
-   F_calculate(V_x, V_y, V_message);
-end
-num F_calculate(V_a, V_b, V_c)
-{
-   num V_temp, num V_result, text V_t,
-   begin
-       V_temp = 10;
-       return V_temp;
-   end
+main 
+
+ num V_kai , text V_kadi,
+  begin 
+
+   skip; 
+    halt; 
+    print -9.03; 
+     V_kai = -12.03; 
+  
+   
+    V_kai= sqrt(1); 
+   
+    if eq(1,2)
+    then 
+     begin 
+      end 
+      else 
+      begin 
+      end; 
+ end
+ num F_band(V_rt,V_tr, V_esd){
+
+   text V_bi , text V_trwa , num V_asz, 
+   begin 
+   print V_rt;
+  
+ 
+    end
+
+
+}end
+  num F_badend(V_rrt,V_tfr, V_esdd){
+
+   text V_bei , text V_trxwa , num V_ascz, 
+   begin 
+   print V_bei;
+  
+   V_ascz= add(add(1,1), mul(1,2)); 
+    end
+
+
 }
-   num F_helper(V_p, V_q, V_r)
-   {
-       num V_temp, num V_x, text V_y,
-       begin
-           V_temp = 20;
-           return V_temp;
-       end
-   }
-   end
-end
+ 
+ end
