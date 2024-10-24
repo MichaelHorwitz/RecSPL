@@ -5,14 +5,25 @@ import java.util.ArrayList;
 
 
 public class SymbolTable {
+    private class Pair{
+        public String name;
+        public int scope;
+        public Pair(){
 
+        }
+        public Pair(String name, int scope) {
+            this.name = name;
+            this.scope = scope;
+        }
+    }
 public static final String RED = "\033[0;31m";
 public static final String YELLOW = "\033[0;33m";
 
     HashMap<Integer, VariableProps> table;
     ArrayList<HashMap<Integer, VariableProps>> listOfTables;
     Stack<HashMap<Integer, VariableProps>> stackOfTables;
-    ArrayList<String> funcCalls;
+    ArrayList<Pair> funcCalls;
+    ArrayList<Pair> funcDefs;
     public SymbolTable(){
         table = new HashMap<>();
         stackOfTables = new Stack<>();
@@ -22,12 +33,15 @@ public static final String YELLOW = "\033[0;33m";
             System.out.println("Invalid root");
             return;
         }
+
         funcCalls = new ArrayList<>();
+        funcDefs = new ArrayList<>();
         recGen(root);
-        if (!funcCalls.isEmpty()) {
-            System.out.println("The following functions were called but not declared");
-            System.out.println(funcCalls);
-        }
+        funcCheck(root);
+        // if (!funcCalls.isEmpty()) {
+        //     System.out.println("The following functions were called but not declared");
+        //     System.out.println(funcCalls);
+        // }
         System.out.println("-------------------------------------------------------");
         System.out.println( RED+"Finished scope analysis");
         System.out.println("-------------------------------------------------------");
@@ -44,6 +58,51 @@ public static final String YELLOW = "\033[0;33m";
        // return table;
     //}
     // Used to recursively generate the table from the tree
+    public int currScope;
+    public void funcCheck(Node currNode){
+        funcCalls = new ArrayList<>();
+        currScope = 0;
+        recFunCheck(currNode, currScope);
+        boolean valid = true;
+        for (Pair call : funcCalls) {
+            boolean match = false;
+            for (Pair def : funcDefs) {
+                if (call.name.equals(def.name)) {
+                    if(call.scope <= def.scope){
+                        match = true;
+                    } else {
+                        valid = false;
+                        System.out.println("Invalid function call: " + call.name);
+                        
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    public void recFunCheck(Node currNode, int currScope){
+        if (currNode.NodeName.equals("DECL")) {
+            Node fNameNode = currNode.childNodes.getFirst().childNodes.get(1);
+            funcDefs.add(new Pair(fNameNode.childNodes.getFirst().NodeName, currScope));
+            currScope++;
+            for (Node node : currNode.childNodes) {
+                recFunCheck(node, currScope);
+            }
+            return;
+        } else if (currNode.NodeName.equals("CALL")) {
+            Node fNameNode = currNode.childNodes.getFirst();
+            funcCalls.add(new Pair(fNameNode.childNodes.getFirst().NodeName, currScope));
+            for (Node node : currNode.childNodes) {
+                recFunCheck(node, currScope);
+            }
+            return;
+        } else {
+            for (Node node : currNode.childNodes) {
+                recFunCheck(node, currScope);
+            }
+            return;
+        }
+    }
     public void recGen(Node currNode){
         if (currNode == null) {
             return;
@@ -111,7 +170,7 @@ public static final String YELLOW = "\033[0;33m";
                 if (node.NodeName.equals("VNAME")) {
                     VariableProps newVar = new VariableProps();
                     String varName = node.childNodes.get(0).NodeName;
-                    if (checkAlreadyInTable(varName, table)) {
+                    if (checkAlreadyInTable(varName, stackOfTables.peek())) {
                         System.out.println("Variable already declared: " + varName);
                         return;
                     }

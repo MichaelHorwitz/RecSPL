@@ -11,7 +11,8 @@ public class RecSPLMain {
         RecSPLLexer lexer = new RecSPLLexer(); // Create a lexer instance
         try {
             // Lexical Analysis
-            boolean lex = lexer.readFile("input.txt"); // Replace with your input file
+            String inputFileName = (args.length > 0) ? args[0] : "input.txt";
+            boolean lex = lexer.readFile(inputFileName); // Use the provided file name or default to input.txt
             if (lex) {  // Lexer didn't give any error
                 lexer.Tokenize();
                 System.out.println(  " 1. Lexer has tokenized the input successfully. Check LexerOutput.txt");
