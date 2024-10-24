@@ -836,39 +836,57 @@ private String typeCheckBinopType(Node binopNode) {
 
 
 private String typeCheckAtomics(Node atomic) {
-    // Assuming atomic node represents either a variable or a constant.
-    if (atomic.NodeName.equals("VNAME")) {  // Check if the node is a variable (VNAME)
-        String varName = atomic.childNodes.get(0).NodeName;  // Extract the variable name
-        if (varName.startsWith("V_")) {  // Assuming variable names start with "V_"
-            VariableProps varProps = getVariableProps(varName);  // Lookup in the symbol table
+    // Check if the node is either a variable or a constant.
+    
+    String nodeName = atomic.NodeName;  // Get the atomic node's name
+    
+    // Case 1: Handle variable names (either "VNAME" or directly the variable names like "V_x", "V_y")
+    if (nodeName.equals("VNAME") || nodeName.startsWith("V_")) {  
+        String varName;
+        
+        if (nodeName.equals("VNAME")) {
+            varName = atomic.childNodes.get(0).NodeName;  // Extract the variable name from the child node
+        } else {
+            varName = nodeName;  // Directly use the node name if it's like "V_x", "V_y"
+        }
+        
+        if (varName.startsWith("V_")) {  // Ensure it starts with "V_" as expected for variable names
+            VariableProps varProps = getVariableProps(varName);  // Lookup the variable in the symbol table
             if (varProps == null) {
                 System.out.println("Error: Variable not found in symbol table: " + varName);
                 return "u";  // Return undefined if variable not found
             }
-            return varProps.varType;  // Return the type of the variable
+            return varProps.varType;  // Return the type of the variable (e.g., "num", "text")
         } else {
             System.out.println("Error: Invalid variable name format: " + varName);
             return "u";  // Invalid variable name format
         }
     } 
-    else if (atomic.NodeName.equals("CONST")) {  // Check if the node is a constant (CONST)
+    
+    // Case 2: Handle constants (CONST)
+    else if (nodeName.equals("CONST")) {
         String constValue = atomic.childNodes.get(0).NodeName;  // Extract the constant value
+        
         // Check if it's a numeric constant
         if (constValue.matches("-?[0-9]+(\\.[0-9]+)?")) {
-            return "num";  // Return "num" for numeric constant
+            return "num";  // Numeric constant
         }
-        // Check if it's a valid text constant (assuming format "Text")
+        // Check if it's a valid text constant
         else if (constValue.matches("\"[A-Za-z]{1,8}\"")) {
-            return "text";  // Return "text" for text constant
+            return "text";  // Text constant
         } else {
             System.out.println("Error: Invalid constant value: " + constValue);
-            return "u";  // Return undefined for invalid constant format
+            return "u";  // Undefined for invalid constant
         }
-    } else {
-        System.out.println("Error: Unexpected node type: " + atomic.NodeName);
+    } 
+    
+    // Case 3: Unexpected node type
+    else {
+        System.out.println("Error: Unexpected node type: " + nodeName);
         return "u";  // Return undefined for unexpected node types
     }
 }
+
 
    
 
@@ -1100,7 +1118,7 @@ private boolean validateReturnType(Node algoNode, Node ftypNode) {
                     returnFound = true;  // Set the flag that return has been found
                 } else if (returnFound) {
                     // If return was found, check the next node
-                    if (commandChild.NodeName.equals("CONST")) {
+                    if (commandChild.NodeName.equals("CONST")|| commandChild.NodeName.equals("-?[0-9]+(\\.[0-9]+)?")) {
                        // System.out.println("Found return value node: " + commandChild.NodeName);
 
                         // Check if the CONST is a number
@@ -1137,8 +1155,10 @@ private boolean validateReturnType(Node algoNode, Node ftypNode) {
 
 // Function to check if the CONST is a numeric value
 private boolean isNumericConst(Node constNode) {
-    String constValue = constNode.NodeName;  // Assuming NodeName holds the value of CONST
+
+    String constValue = constNode.childNodes.get(0).NodeName;  // Assuming NodeName holds the value of CONST
     // Regex to match numeric values
+    //System.out.println("this is return value"+ constValue);
     return constValue.matches("-?[0-9]+(\\.[0-9]+)?");
 }
 
