@@ -111,7 +111,7 @@ public static final String YELLOW = "\033[0;33m";
                 if (node.NodeName.equals("VNAME")) {
                     VariableProps newVar = new VariableProps();
                     String varName = node.childNodes.get(0).NodeName;
-                    if (checkAlreadyInTable(varName, table)) {
+                    if (checkAlreadyInTable(varName, stackOfTables.peek())) {
                         System.out.println("Variable already declared: " + varName);
                         return;
                     }
